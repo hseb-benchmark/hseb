@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hseb"
+version = "0.0.1"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Development Status :: 3 - Alpha",
+    "Environment :: GPU",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "sentence_transformers>=5.0.0",
+    "datasets",
+    "typed-argparse",
+    "faiss-cpu",
+    "docker",
+    "pydantic"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest", "pytest-skip-slow", "ruff"
+]
+
+[tool.ruff]
+line-length = 119
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+addopts = ["--import-mode=importlib"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["hseb*"]

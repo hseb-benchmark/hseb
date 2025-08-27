@@ -1,0 +1,4 @@
+.claude
+node_modules
+package*json
+*.egg-info

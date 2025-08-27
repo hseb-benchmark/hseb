@@ -1,0 +1,17 @@
+engine: nixiesearch
+image: nixiesearch/nixiesearch:0.6.2
+dataset: 
+  dim: 384
+  name: nixiesearch/benchmark-msmarco
+  query: "query-all-MiniLM-L6-v2-1K"
+  corpus: "corpus-all-MiniLM-L6-v2-1K"
+batch_size: 1024
+experiments:
+- tag: test
+  index:
+    m: [8, 16]
+    ef_construction: [16, 32]
+    quant: ["float32"]
+  search:
+    ef_search: [32, 48, 64, 72]
+    filter_selectivity: [10, 90, 100]

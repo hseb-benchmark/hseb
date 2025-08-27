@@ -1,0 +1,104 @@
+from hseb.engine.base import EngineBase
+import requests
+import json
+import time
+from hseb.core.response import Response
+import tempfile
+import yaml
+from hseb.core.config import Config, SearchArgs, IndexArgs
+from hseb.core.dataset import Doc, Query
+import docker
+
+
+class Nixiesearch(EngineBase):
+    def __init__(self, config: Config):
+        self.config = config
+
+    def index_batch(self, batch: list[Doc]):
+        payload = []
+        for doc in batch:
+            doc_json = {
+                "_id": doc.id,
+                "text": {"text": doc.text, "embedding": doc.embedding.tolist()},
+                "tag": doc.tag,
+            }
+            payload.append(doc_json)
+        response = requests.post("http://localhost:8080/v1/index/test", json=payload)
+        if response.status_code != 200:
+            raise Exception(response.text)
+
+    def commit(self):
+        print(requests.post("http://localhost:8080/v1/index/test/flush"))
+        print("flushing done, merging...")
+        print(requests.post("http://localhost:8080/v1/index/test/merge"))
+        print("indexing done")
+
+    def search(self, search_params: SearchArgs, query: Query, top_k: int) -> Response:
+        payload = {
+            "query": {
+                "knn": {
+                    "field": "text",
+                    "query_vector": query.embedding.tolist(),
+                    "k": search_params.ef_search,
+                }
+            },
+            "size": top_k,
+        }
+        if search_params.filter_selectivity != 100:
+            payload["filter"] = {"include": {"term": {"tags": search_params.filter_selectivity}}}
+        start = time.time_ns()
+        response = requests.post("http://localhost:8080/v1/index/test/search", json=payload)
+        end = time.time_ns()
+        decoded = json.loads(response.text)
+        ids = [int(hit["_id"]) for hit in decoded["hits"]]
+        scores = [float(hit["_score"]) for hit in decoded["hits"]]
+        return Response(
+            results=ids,
+            scores=scores,
+            client_latency=(end - start) / 1000000000.0,
+            server_latency=decoded["took"],
+        )
+
+    def start(self, index_args: IndexArgs):
+        engine_config_file = {
+            "schema": {
+                "test": {
+                    "config": {"flush": {"interval": "1h"}},
+                    "fields": {
+                        "text": {
+                            "type": "text",
+                            "search": {
+                                "semantic": {
+                                    "m": index_args.m,
+                                    "ef": index_args.ef_construction,
+                                    "dim": self.config.dataset.dim,
+                                    "quantize": index_args.quant,
+                                }
+                            },
+                        },
+                        "tag": {"type": "int[]", "filter": True},
+                    },
+                }
+            },
+        }
+
+        self.dir = tempfile.TemporaryDirectory()
+        # self.container = None
+        with open(f"{self.dir.name}/config.yml", "w") as config_file:
+            config_file.write(yaml.safe_dump(engine_config_file))
+        docker_client = docker.from_env()
+        self.container = docker_client.containers.run(
+            image=self.config.image,
+            ports={"8080/tcp": 8080},
+            volumes={self.dir.name: {"bind": "/data", "mode": "rw"}},
+            command="standalone -c /data/config.yml --loglevel debug",
+            detach=True,
+        )
+        self._wait_for_logs(self.container, "Ember-Server service bound to address")
+        return self
+
+    def stop(self):
+        self.container.stop()
+        self.container.remove()
+        self.dir.cleanup()
+        return False
