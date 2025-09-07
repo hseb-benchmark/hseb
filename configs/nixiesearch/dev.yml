@@ -1,4 +1,5 @@
-engine: nixiesearch
+# class name
+engine: hseb.engine.nixiesearch.nixiesearch.Nixiesearch
 image: nixiesearch/nixiesearch:0.6.2
 dataset: 
   dim: 384

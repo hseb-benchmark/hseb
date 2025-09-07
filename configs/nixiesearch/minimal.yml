@@ -1,5 +1,5 @@
-engine: nixiesearch
-image: nixiesearch/nixiesearch:0.6.1-M1-amd64
+engine: hseb.engine.nixiesearch.nixiesearch.Nixiesearch
+image: nixiesearch/nixiesearch:0.6.3-amd64
 dataset: 
   dim: 384
   name: nixiesearch/benchmark-msmarco

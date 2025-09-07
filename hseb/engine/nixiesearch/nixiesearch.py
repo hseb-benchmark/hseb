@@ -8,6 +8,9 @@ import yaml
 from hseb.core.config import Config, SearchArgs, IndexArgs
 from hseb.core.dataset import Doc, Query
 import docker
+import logging
+
+logger = logging.getLogger()
 
 
 class Nixiesearch(EngineBase):
@@ -28,10 +31,10 @@ class Nixiesearch(EngineBase):
             raise Exception(response.text)
 
     def commit(self):
-        print(requests.post("http://localhost:8080/v1/index/test/flush"))
-        print("flushing done, merging...")
-        print(requests.post("http://localhost:8080/v1/index/test/merge"))
-        print("indexing done")
+        logger.debug(requests.post("http://localhost:8080/v1/index/test/flush"))
+        logger.info("flushing done, merging...")
+        logger.debug(requests.post("http://localhost:8080/v1/index/test/merge"))
+        logger.info("indexing done")
 
     def search(self, search_params: SearchArgs, query: Query, top_k: int) -> Response:
         payload = {
@@ -99,6 +102,5 @@ class Nixiesearch(EngineBase):
 
     def stop(self):
         self.container.stop()
-        self.container.remove()
         self.dir.cleanup()
         return False

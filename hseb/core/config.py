@@ -15,7 +15,7 @@ class Config(BaseModel):
 
     @staticmethod
     def from_yaml(text: str) -> Config:
-        parsed = yaml.safe_load(text)
+        parsed: dict = yaml.safe_load(text)
         return Config(**parsed)
 
     @staticmethod

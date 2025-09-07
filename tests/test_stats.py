@@ -2,7 +2,7 @@ import numpy as np
 from hseb.core.stats import Stats, PERCENTILES
 
 
-def test_from_list_normal_positive_values(self):
+def test_from_list_normal_positive_values():
     values = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
     stats = Stats.from_list(values)
 
@@ -10,7 +10,7 @@ def test_from_list_normal_positive_values(self):
     assert len(stats.percentiles) == len(PERCENTILES)
 
 
-def test_from_list_single_value(self):
+def test_from_list_single_value():
     values = [42.5]
     stats = Stats.from_list(values)
 
@@ -21,7 +21,7 @@ def test_from_list_single_value(self):
         assert percentile_value == 42.5
 
 
-def test_from_list_floating_point_precision(self):
+def test_from_list_floating_point_precision():
     values = [1.123456789, 2.987654321, 3.141592653, 4.999999999]
     stats = Stats.from_list(values)
 

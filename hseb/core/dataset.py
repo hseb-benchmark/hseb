@@ -32,17 +32,17 @@ QUERY_SCHEMA = Features(
 
 
 class BenchmarkDataset:
-    query: Dataset
-    corpus: Dataset
+    query_dataset: Dataset
+    corpus_dataset: Dataset
 
     def __init__(self, config: DatasetConfig) -> None:
-        self.query = load_dataset(config.name, config.query, split="train", features=QUERY_SCHEMA)
-        self.corpus = load_dataset(config.name, config.corpus, split="train", features=CORPUS_SCHEMA)
+        self.query_dataset = load_dataset(config.name, config.query, split="train", features=QUERY_SCHEMA)
+        self.corpus_dataset = load_dataset(config.name, config.corpus, split="train", features=CORPUS_SCHEMA)
 
-    def corpus_batches(self, batch_size: int) -> Generator[list[Doc], Any, None]:
-        for batch in self.corpus.batch(batch_size):
+    def corpus_batched(self, batch_size: int) -> Generator[list[Doc], Any, None]:
+        for batch in self.corpus_dataset.batch(batch_size):
             result: list[Doc] = []
-            for id, text, embedding, tag in zip(batch["id"], "text", "embedding", "tag"):
+            for id, text, embedding, tag in zip(batch["id"], batch["text"], batch["embedding"], batch["tag"]):
                 result.append(
                     Doc(
                         id=id,
@@ -52,6 +52,10 @@ class BenchmarkDataset:
                     )
                 )
             yield result
+
+    def queries(self) -> Generator[Query, Any, None]:
+        for row in self.query_dataset:
+            yield Query.from_dict(row)
 
 
 @dataclass
@@ -74,7 +78,7 @@ class Query:
         return Query(
             id=json["id"],
             text=json["text"],
-            embedding=json["embedding"],
+            embedding=np.array(json["embedding"]),
             exact10=DocScores(
                 docs=np.array(json["results_10_docs"]),
                 scores=np.array(json["results_10_scores"]),
