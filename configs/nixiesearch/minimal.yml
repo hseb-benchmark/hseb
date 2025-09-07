@@ -2,7 +2,7 @@ engine: hseb.engine.nixiesearch.nixiesearch.Nixiesearch
 image: nixiesearch/nixiesearch:0.6.3-amd64
 dataset: 
   dim: 384
-  name: nixiesearch/benchmark-msmarco
+  name: hseb-benchmark/msmarco
   query: "query-all-MiniLM-L6-v2-100K"
   corpus: "corpus-all-MiniLM-L6-v2-100K"
 batch_size: 1024

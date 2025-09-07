@@ -4,6 +4,9 @@ from typing import Any
 from itertools import product
 from pydantic import BaseModel, Field
 from dataclasses import dataclass, asdict
+from structlog import get_logger
+
+logger = get_logger()
 
 
 class Config(BaseModel):
@@ -20,7 +23,9 @@ class Config(BaseModel):
     @staticmethod
     def from_file(path: str) -> Config:
         with open(path, "r") as f:
-            return Config.from_yaml(f.read())
+            config = Config.from_yaml(f.read())
+            logger.info(f"Loaded config file from {path}, engine: {config.engine}")
+            return config
 
 
 class DatasetConfig(BaseModel):

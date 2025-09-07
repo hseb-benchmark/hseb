@@ -4,6 +4,10 @@ from datasets import load_dataset, Features, Value, Sequence, Dataset
 from dataclasses import dataclass
 import numpy as np
 from typing import Generator, Any
+from hseb.core.response import DocScore
+from structlog import get_logger
+
+logger = get_logger()
 
 CORPUS_SCHEMA = Features(
     {
@@ -36,6 +40,7 @@ class BenchmarkDataset:
     def __init__(self, config: DatasetConfig) -> None:
         self.query_dataset = load_dataset(config.name, config.query, split="train", features=QUERY_SCHEMA)
         self.corpus_dataset = load_dataset(config.name, config.corpus, split="train", features=CORPUS_SCHEMA)
+        logger.info(f"Loaded dataset: {len(self.query_dataset)} queries, {len(self.corpus_dataset)} documents")
 
     def corpus_batched(self, batch_size: int) -> Generator[list[Doc], Any, None]:
         for batch in self.corpus_dataset.batch(batch_size):
@@ -57,19 +62,13 @@ class BenchmarkDataset:
 
 
 @dataclass
-class DocScores:
-    docs: np.ndarray
-    scores: np.ndarray
-
-
-@dataclass
 class Query:
     id: int
     text: str
     embedding: np.ndarray
-    exact10: DocScores
-    exact90: DocScores
-    exact100: DocScores
+    exact10: list[DocScore]
+    exact90: list[DocScore]
+    exact100: list[DocScore]
 
     @staticmethod
     def from_dict(json: dict) -> Query:
@@ -77,18 +76,11 @@ class Query:
             id=json["id"],
             text=json["text"],
             embedding=np.array(json["embedding"]),
-            exact10=DocScores(
-                docs=np.array(json["results_10_docs"]),
-                scores=np.array(json["results_10_scores"]),
-            ),
-            exact90=DocScores(
-                docs=np.array(json["results_90_docs"]),
-                scores=np.array(json["results_90_scores"]),
-            ),
-            exact100=DocScores(
-                docs=np.array(json["results_100_docs"]),
-                scores=np.array(json["results_100_scores"]),
-            ),
+            exact10=[DocScore(doc, score) for doc, score in zip(json["results_10_docs"], json["results_10_scores"])],
+            exact90=[DocScore(doc, score) for doc, score in zip(json["results_90_docs"], json["results_90_scores"])],
+            exact100=[
+                DocScore(doc, score) for doc, score in zip(json["results_100_docs"], json["results_100_scores"])
+            ],
         )
 
 

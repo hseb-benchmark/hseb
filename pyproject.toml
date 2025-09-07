@@ -20,7 +20,8 @@ dependencies = [
     "typed-argparse",
     "faiss-cpu",
     "docker",
-    "pydantic"
+    "pydantic",
+    "structlog"
 ]
 
 [project.optional-dependencies]

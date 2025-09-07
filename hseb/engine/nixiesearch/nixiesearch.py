@@ -2,7 +2,7 @@ from hseb.engine.base import EngineBase
 import requests
 import json
 import time
-from hseb.core.response import Response
+from hseb.core.response import DocScore, Response
 import tempfile
 import yaml
 from hseb.core.config import Config, SearchArgs, IndexArgs
@@ -18,6 +18,7 @@ class Nixiesearch(EngineBase):
         self.config = config
 
     def index_batch(self, batch: list[Doc]):
+        start = time.perf_counter()
         payload = []
         for doc in batch:
             doc_json = {
@@ -27,6 +28,7 @@ class Nixiesearch(EngineBase):
             }
             payload.append(doc_json)
         response = requests.post("http://localhost:8080/v1/index/test", json=payload)
+        logger.debug(f"Indexed batch of {len(batch)} docs in {time.perf_counter() - start} sec")
         if response.status_code != 200:
             raise Exception(response.text)
 
@@ -53,11 +55,10 @@ class Nixiesearch(EngineBase):
         response = requests.post("http://localhost:8080/v1/index/test/search", json=payload)
         end = time.time_ns()
         decoded = json.loads(response.text)
-        ids = [int(hit["_id"]) for hit in decoded["hits"]]
-        scores = [float(hit["_score"]) for hit in decoded["hits"]]
+        logger.info(decoded)
+        results = [DocScore(doc=int(hit["_id"]), score=float(hit["_score"])) for hit in decoded["hits"]]
         return Response(
-            results=ids,
-            scores=scores,
+            results=results,
             client_latency=(end - start) / 1000000000.0,
             server_latency=decoded["took"],
         )

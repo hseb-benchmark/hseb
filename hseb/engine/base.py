@@ -32,7 +32,7 @@ class EngineBase(ABC):
         start_time = time.time()
         while time.time() - start_time < timeout:
             logs = container.logs().decode("utf-8")
-            print(logs)
+            # print(logs)
             if log_message in logs:
                 return True
             time.sleep(1)
