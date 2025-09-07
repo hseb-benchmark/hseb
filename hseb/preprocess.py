@@ -6,7 +6,6 @@ import numpy as np
 from functools import partial
 import faiss
 import os
-from collections import defaultdict
 from tqdm import tqdm
 
 selectivities = [10, 90, 100]

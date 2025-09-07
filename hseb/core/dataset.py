@@ -3,9 +3,7 @@ from hseb.core.config import DatasetConfig
 from datasets import load_dataset, Features, Value, Sequence, Dataset
 from dataclasses import dataclass
 import numpy as np
-from torch.utils.data import DataLoader
 from typing import Generator, Any
-import itertools
 
 CORPUS_SCHEMA = Features(
     {

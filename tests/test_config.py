@@ -1,4 +1,4 @@
-from hseb.core.config import Config, IndexArgs, IndexArgsMatrix, SearchArgs, SearchArgsMatrix
+from hseb.core.config import Config, IndexArgsMatrix, SearchArgsMatrix
 
 
 class TestConfig:

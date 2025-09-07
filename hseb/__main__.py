@@ -1,8 +1,8 @@
 import argparse
 from hseb.engine.nixiesearch.nixiesearch import Nixiesearch
-from hseb.core.config import Config, ExperimentConfig
+from hseb.core.config import Config
 from hseb.core.dataset import BenchmarkDataset
-from hseb.core.measurement import Measurement, ExperimentResult
+from hseb.core.measurement import Measurement
 from tqdm import tqdm
 import json
 

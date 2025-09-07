@@ -4,7 +4,6 @@ from typing import Any
 from itertools import product
 from pydantic import BaseModel, Field
 from dataclasses import dataclass, asdict
-from abc import ABC
 
 
 class Config(BaseModel):

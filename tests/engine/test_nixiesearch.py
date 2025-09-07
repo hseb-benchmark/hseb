@@ -1,22 +1,15 @@
-from typing import override
 from hseb.core.config import (
     Config,
     ExperimentConfig,
     DatasetConfig,
-    IndexArgs,
     IndexArgsMatrix,
-    SearchArgs,
     SearchArgsMatrix,
 )
-from hseb.engine.nixiesearch.nixiesearch import Nixiesearch
-from hseb.core.dataset import BenchmarkDataset
-from tqdm import tqdm
 
 from tests.engine.base import EngineSuite
 
 
 class TestNixiesearch(EngineSuite):
-    @override
     def config(self) -> Config:
         return Config(
             engine="hseb.engine.nixiesearch.nixiesearch.Nixiesearch",

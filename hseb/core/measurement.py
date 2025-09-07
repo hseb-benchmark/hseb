@@ -1,7 +1,5 @@
 from __future__ import annotations
 from hseb.core.response import Response
-from typing import Any
-import numpy as np
 from hseb.core.config import IndexArgs, SearchArgs
 from dataclasses import dataclass
 
