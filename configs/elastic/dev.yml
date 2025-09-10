@@ -1,21 +1,22 @@
-engine: hseb.engine.nixiesearch.nixiesearch.NixiesearchEngine
-image: nixiesearch/nixiesearch:0.6.4
+# class name
+engine: hseb.engine.elastic.elastic.ElasticsearchEngine
+image: elasticsearch:9.1.3
 dataset: 
   dim: 384
   name: hseb-benchmark/msmarco
   query: "query-all-MiniLM-L6-v2-100K"
   corpus: "corpus-all-MiniLM-L6-v2-100K"
 batch_size: 1024
-k: 100
 experiments:
 - tag: test
+  k: 10
   index:
-    m: [16, 32, 64, 96, 128]
-    ef_construction: [32, 64, 96, 128, 160, 192, 224, 256]
+    m: [8, 16]
+    ef_construction: [16, 32]
     quant: ["float32"]
     kwargs:
-      ram_buffer_size: ["512mb"]
+      index_buffer_size: [536870912] # 512mb
       heap_size: ["8g"]
   search:
-    ef_search: [16, 32, 48, 64, 72, 96, 112, 128]
+    ef_search: [64, 96]
     filter_selectivity: [10, 90, 100]

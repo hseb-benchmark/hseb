@@ -1,6 +1,6 @@
 from __future__ import annotations
 from hseb.core.response import DocScore, Response
-from hseb.core.config import IndexArgs, SearchArgs
+from hseb.core.config import Config, IndexArgs, SearchArgs
 from dataclasses import dataclass
 
 
@@ -17,7 +17,6 @@ class Measurement:
     query_id: int
     exact: list[DocScore]
     response: list[DocScore]
-    server_latency: float
     client_latency: float
 
     @staticmethod
@@ -31,5 +30,12 @@ class Measurement:
             exact=exact,
             response=response.results,
             client_latency=response.client_latency,
-            server_latency=response.server_latency,
         )
+
+
+@dataclass
+class Submission:
+    time: str
+    version: str
+    config: Config
+    experiments: list[ExperimentResult]

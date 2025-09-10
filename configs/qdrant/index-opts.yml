@@ -1,0 +1,39 @@
+# class name
+engine: hseb.engine.qdrant.qdrant.Qdrant
+image: qdrant/qdrant:v1.15.4
+dataset: 
+  dim: 384
+  name: hseb-benchmark/msmarco
+  query: "query-all-MiniLM-L6-v2-100K"
+  corpus: "corpus-all-MiniLM-L6-v2-100K"
+batch_size: 1024
+experiments:
+- tag: no-quant
+  k: 100
+  index:
+    m: [32]
+    ef_construction: [64]
+    quant: ["float32"]
+    kwargs:
+      original_vectors_on_disk: [true, false]
+      hnsw_on_disk: [true, false]
+      max_segment_size_kb: [20480]
+  search:
+    ef_search: [32, 48, 64, 72]
+    filter_selectivity: [100]
+    kwargs:
+- tag: quant-int8
+  index:
+    m: [32]
+    ef_construction: [64]
+    quant: ["int8"]
+    kwargs:
+      original_vectors_on_disk: [true, false]
+      hnsw_on_disk: [true, false]
+      rescore: [true, false]
+      max_segment_size_kb: [20480]
+  search:
+    ef_search: [32, 48, 64, 72]
+    filter_selectivity: [100]
+    kwargs:
+      rescore: [true, false]

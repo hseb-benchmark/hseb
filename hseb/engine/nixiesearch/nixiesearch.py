@@ -13,7 +13,7 @@ import logging
 logger = logging.getLogger()
 
 
-class Nixiesearch(EngineBase):
+class NixiesearchEngine(EngineBase):
     def __init__(self, config: Config):
         self.config = config
 
@@ -35,8 +35,8 @@ class Nixiesearch(EngineBase):
     def commit(self):
         logger.debug(requests.post("http://localhost:8080/v1/index/test/flush"))
         logger.info("flushing done, merging...")
-        logger.debug(requests.post("http://localhost:8080/v1/index/test/merge"))
-        logger.info("indexing done")
+        # logger.debug(requests.post("http://localhost:8080/v1/index/test/merge"))
+        # logger.info("indexing done")
 
     def search(self, search_params: SearchArgs, query: Query, top_k: int) -> Response:
         payload = {
@@ -55,19 +55,17 @@ class Nixiesearch(EngineBase):
         response = requests.post("http://localhost:8080/v1/index/test/search", json=payload)
         end = time.time_ns()
         decoded = json.loads(response.text)
-        logger.info(decoded)
         results = [DocScore(doc=int(hit["_id"]), score=float(hit["_score"])) for hit in decoded["hits"]]
-        return Response(
-            results=results,
-            client_latency=(end - start) / 1000000000.0,
-            server_latency=decoded["took"],
-        )
+        return Response(results=results, client_latency=(end - start) / 1000000000.0)
 
     def start(self, index_args: IndexArgs):
         engine_config_file = {
             "schema": {
                 "test": {
-                    "config": {"flush": {"interval": "1h"}},
+                    "config": {
+                        "flush": {"interval": "1h"},
+                        "ramBufferSize": index_args.kwargs.get("ram_buffer_size", "512mb"),
+                    },
                     "fields": {
                         "text": {
                             "type": "text",
@@ -76,7 +74,7 @@ class Nixiesearch(EngineBase):
                                     "m": index_args.m,
                                     "ef": index_args.ef_construction,
                                     "dim": self.config.dataset.dim,
-                                    "quantize": index_args.quant,
+                                    "quantize": index_args.quant.value,
                                 }
                             },
                         },
@@ -91,11 +89,15 @@ class Nixiesearch(EngineBase):
         with open(f"{self.dir.name}/config.yml", "w") as config_file:
             config_file.write(yaml.safe_dump(engine_config_file))
         docker_client = docker.from_env()
+        heap_size = index_args.kwargs.get("heap_size", "8g")
         self.container = docker_client.containers.run(
             image=self.config.image,
             ports={"8080/tcp": 8080},
             volumes={self.dir.name: {"bind": "/data", "mode": "rw"}},
             command="standalone -c /data/config.yml --loglevel debug",
+            environment={
+                "JAVA_OPTS": f"-Xmx{heap_size} -Xms{heap_size} -verbose:gc --add-modules jdk.incubator.vector"
+            },
             detach=True,
         )
         self._wait_for_logs(self.container, "Ember-Server service bound to address")

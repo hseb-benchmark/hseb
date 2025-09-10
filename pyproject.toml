@@ -21,7 +21,9 @@ dependencies = [
     "faiss-cpu",
     "docker",
     "pydantic",
-    "structlog"
+    "structlog",
+    "qdrant-client",
+    "elasticsearch"
 ]
 
 [project.optional-dependencies]

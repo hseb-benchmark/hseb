@@ -5,6 +5,7 @@ from itertools import product
 from pydantic import BaseModel, Field
 from dataclasses import dataclass, asdict
 from structlog import get_logger
+from enum import StrEnum
 
 logger = get_logger()
 
@@ -37,6 +38,7 @@ class DatasetConfig(BaseModel):
 
 class ExperimentConfig(BaseModel):
     tag: str
+    k: int
     index: IndexArgsMatrix
     search: SearchArgsMatrix
 
@@ -45,7 +47,7 @@ class ExperimentConfig(BaseModel):
 class IndexArgs:
     m: int
     ef_construction: int
-    quant: str
+    quant: QuantDatatype
     batch_size: int
     kwargs: dict[str, Any]
 
@@ -58,17 +60,9 @@ class IndexArgs:
 class IndexArgsMatrix(BaseModel):
     m: list[int]
     ef_construction: list[int]
-    quant: list[str]
+    quant: list[QuantDatatype]
     batch_size: int = 1024
     kwargs: dict[str, list] = Field(default_factory=dict)
-
-    @staticmethod
-    def from_dict(input: dict) -> IndexArgsMatrix:
-        defined_fields = {"m", "ef_construction", "quant", "batch_size"}
-        regular_fields = {k: v for k, v in input.items() if k in defined_fields}
-        extra_fields = {k: v for k, v in input.items() if k not in defined_fields}
-
-        return IndexArgsMatrix(**regular_fields, kwargs=extra_fields)
 
     def expand(self) -> list[IndexArgs]:
         """Generate all permutations of parameters from IndexArgs."""
@@ -87,6 +81,12 @@ class IndexArgsMatrix(BaseModel):
         ]
 
 
+class QuantDatatype(StrEnum):
+    FLOAT32 = "float32"
+    INT8 = "int8"
+    INT1 = "int1"
+
+
 @dataclass
 class SearchArgs:
     ef_search: int
@@ -103,13 +103,6 @@ class SearchArgsMatrix(BaseModel):
     ef_search: list[int]
     filter_selectivity: list[int]
     kwargs: dict[str, list] = Field(default_factory=dict)
-
-    @staticmethod
-    def from_dict(input: dict) -> SearchArgsMatrix:
-        defined_fields = {"ef_search", "filter_selectivity"}
-        regular_fields = {k: v for k, v in input.items() if k in defined_fields}
-        extra_fields = {k: v for k, v in input.items() if k not in defined_fields}
-        return SearchArgsMatrix(**regular_fields, kwargs=extra_fields)
 
     def expand(self) -> list[SearchArgs]:
         """Generate all permutations of parameters from IndexArgs."""

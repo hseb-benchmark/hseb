@@ -11,4 +11,3 @@ class DocScore:
 class Response:
     results: list[DocScore]
     client_latency: float
-    server_latency: float
