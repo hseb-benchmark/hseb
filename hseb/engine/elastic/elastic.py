@@ -46,7 +46,10 @@ class ElasticsearchEngine(EngineBase):
         self.client.indices.create(
             index="test",
             settings={
-                "index": {"refresh_interval": "1h"},
+                "index": {
+                    "refresh_interval": "1h",
+                    "merge": {"policy": {"max_merged_segment": index_args.kwargs.get("max_merged_segment", "128mb")}},
+                },
             },  # we control segment size
             mappings={
                 "properties": {
