@@ -31,6 +31,10 @@ class NixiesearchEngine(EngineBase):
         logger.debug(f"Indexed batch of {len(batch)} docs in {time.perf_counter() - start} sec")
         if response.status_code != 200:
             raise Exception(response.text)
+        self.docs_in_segment += len(batch)
+        if self.docs_in_segment >= index_args.kwargs.get("docs_per_segment", 1024):
+            requests.post("http://localhost:8080/v1/index/test/flush")
+            self.docs_in_segment = 0
 
     def commit(self):
         logger.debug(requests.post("http://localhost:8080/v1/index/test/flush"))
@@ -101,6 +105,7 @@ class NixiesearchEngine(EngineBase):
             detach=True,
         )
         self._wait_for_logs(self.container, "Ember-Server service bound to address")
+        self.docs_in_segment = 0
         return self
 
     def stop(self):

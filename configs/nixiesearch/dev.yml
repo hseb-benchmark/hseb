@@ -10,12 +10,13 @@ batch_size: 1024
 k: 100
 experiments:
 - tag: test
+  k: 100
   index:
     m: [8, 16]
     ef_construction: [16, 32]
-    quant: ["float32"]
+    quant: ["float32"]  
     kwargs:
-      ram_buffer_size: ["512mb"]
+      docs_per_segment: [12500]
       heap_size: ["8g"]
   search:
     ef_search: [128, 256]

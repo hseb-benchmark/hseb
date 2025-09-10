@@ -13,8 +13,9 @@ experiments:
     m: [16, 32, 64, 96, 128]
     ef_construction: [32, 64, 96, 128, 160, 192, 224, 256]
     quant: ["float32"]
+    k: 100
     kwargs:
-      ram_buffer_size: ["512mb"]
+      docs_per_segment: [12500]
       heap_size: ["8g"]
   search:
     ef_search: [16, 32, 48, 64, 72, 96, 112, 128]

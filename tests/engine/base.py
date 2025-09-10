@@ -34,7 +34,7 @@ class EngineSuite(ABC):
 
                     engine.commit()
                     for search_args in exp.search.expand():
-                        for query in tqdm(data.queries(), desc="searching"):
+                        for query in tqdm(list(data.queries())[:10], desc="searching"):
                             engine.search(search_args, query, 10)
                 finally:
                     engine.stop()

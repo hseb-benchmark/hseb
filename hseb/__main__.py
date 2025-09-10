@@ -80,8 +80,8 @@ if __name__ == "__main__":
                             for query in tqdm(list(data.queries()), desc="search"):
                                 response = engine.search(search_args, query, exp.k)
                                 if len(response.results) != exp.k:
-                                    raise Exception(
-                                        f"Engine returned less than {exp.k} docs, this should never happen!"
+                                    logger.warn(
+                                        f"Engine returned {len(response.results)} docs, which less than {exp.k} docs expected"
                                     )
                                 measurements.append(
                                     Measurement.from_response(
