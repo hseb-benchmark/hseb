@@ -12,12 +12,12 @@ experiments:
 - tag: test
   k: 100
   index:
-    m: [8, 16]
-    ef_construction: [16, 32]
+    m: [8]
+    ef_construction: [16]
     quant: ["float32"]  
     kwargs:
       docs_per_segment: [12500]
       heap_size: ["8g"]
   search:
-    ef_search: [128, 256]
+    ef_search: [128]
     filter_selectivity: [10, 90, 100]

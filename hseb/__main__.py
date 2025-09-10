@@ -3,7 +3,7 @@ import time
 from hseb.engine.base import EngineBase
 from hseb.core.config import Config
 from hseb.core.dataset import BenchmarkDataset
-from hseb.core.measurement import ExperimentResult, Measurement
+from hseb.core.measurement import ExperimentResult, Measurement, Submission
 from tqdm import tqdm
 import json
 from dataclasses import asdict
@@ -74,29 +74,26 @@ if __name__ == "__main__":
                             f"Search {search_args_index + 1}/{len(search_variations)} ({run_index + 1}/{total_cases}): {search_args}"
                         )
                         out_file = f"{workdir}/{exp.tag}-{index_args.to_string()}-{search_args.to_string()}.json"
-                        with open(out_file, "w") as out:
-                            measurements: list[Measurement] = []
 
-                            for query in tqdm(list(data.queries()), desc="search"):
-                                response = engine.search(search_args, query, exp.k)
-                                if len(response.results) != exp.k:
-                                    logger.warn(
-                                        f"Engine returned {len(response.results)} docs, which less than {exp.k} docs expected"
-                                    )
-                                measurements.append(
-                                    Measurement.from_response(
-                                        query_id=query.id, exact=query.exact100, response=response
-                                    )
+                        measurements: list[Measurement] = []
+
+                        for query in tqdm(list(data.queries()), desc="search"):
+                            response = engine.search(search_args, query, exp.k)
+                            if len(response.results) != exp.k:
+                                logger.warn(
+                                    f"Engine returned {len(response.results)} docs, which less than {exp.k} docs expected"
                                 )
-
-                            result = ExperimentResult(
-                                tag=exp.tag,
-                                index_args=index_args,
-                                search_args=search_args,
-                                measurements=measurements,
+                            measurements.append(
+                                Measurement.from_response(query_id=query.id, exact=query.exact100, response=response)
                             )
 
-                            out.write(json.dumps(asdict(result)))
+                        result = ExperimentResult(
+                            tag=exp.tag,
+                            index_args=index_args,
+                            search_args=search_args,
+                            measurements=measurements,
+                        )
+                        result.to_json(out_file)
 
                         run_index += 1
                     logger.debug(
@@ -104,4 +101,7 @@ if __name__ == "__main__":
                     )
                 finally:
                     engine.stop()
+        submission = Submission.from_dir(config=config, path=workdir)
+        logger.info(f"Writing submission file to {args.out}")
+        submission.to_json(args.out)
         logger.info("Benchmark finished.")
