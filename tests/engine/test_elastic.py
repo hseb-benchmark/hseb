@@ -9,11 +9,11 @@ from hseb.core.config import (
 from tests.engine.base import EngineSuite
 
 
-class TestQdrantEngine(EngineSuite):
+class TestElasticengine(EngineSuite):
     def config(self) -> Config:
         return Config(
-            engine="hseb.engine.qdrant.qdrant.Qdrant",
-            image="qdrant/qdrant:v1.15.4",
+            engine="hseb.engine.elastic.elastic.ElasticsearchEngine",
+            image="elasticsearch:9.1.3",
             dataset=DatasetConfig(
                 dim=384,
                 name="hseb-benchmark/msmarco",

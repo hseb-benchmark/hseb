@@ -45,6 +45,9 @@ class ElasticsearchEngine(EngineBase):
         self.client = Elasticsearch("http://localhost:9200", request_timeout=30)
         self.client.indices.create(
             index="test",
+            settings={
+                "index": {"refresh_interval": "1h"},
+            },  # we control segment size
             mappings={
                 "properties": {
                     # "_id": {"type": "integer"},
@@ -65,6 +68,7 @@ class ElasticsearchEngine(EngineBase):
                 }
             },
         )
+        self.docs_in_segment = 0
 
     def stop(self):
         self.container.stop()
@@ -72,7 +76,7 @@ class ElasticsearchEngine(EngineBase):
     def commit(self):
         self.client.indices.refresh(index="test")
 
-    def index_batch(self, batch: list[Doc]):
+    def index_batch(self, batch: list[Doc], index_args: IndexArgs):
         actions = []
         for doc in batch:
             actions.append(
@@ -87,6 +91,10 @@ class ElasticsearchEngine(EngineBase):
                 }
             )
         helpers.bulk(self.client, actions)
+        self.docs_in_segment += len(batch)
+        if self.docs_in_segment >= index_args.kwargs.get("docs_per_segment", 1024):
+            self.client.indices.refresh(index="test")
+            self.docs_in_segment = 0
 
     def search(self, search_params: SearchArgs, query: Query, top_k: int) -> Response:
         es_query = {
@@ -100,8 +108,7 @@ class ElasticsearchEngine(EngineBase):
         start = time.time_ns()
         response = self.client.search(index="test", knn=es_query, source=["_id"])
         end = time.time_ns()
-        print(response)
         return Response(
-            results=[DocScore(doc=doc["_id"], score=doc["_score"]) for doc in response["hits"]],
+            results=[DocScore(doc=doc["_id"], score=doc["_score"]) for doc in response["hits"]["hits"]],
             client_latency=(end - start) / 1000000000.0,
         )

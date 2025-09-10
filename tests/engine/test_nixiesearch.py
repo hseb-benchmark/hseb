@@ -12,7 +12,7 @@ from tests.engine.base import EngineSuite
 class TestNixiesearch(EngineSuite):
     def config(self) -> Config:
         return Config(
-            engine="hseb.engine.nixiesearch.nixiesearch.Nixiesearch",
+            engine="hseb.engine.nixiesearch.nixiesearch.NixiesearchEngine",
             image="nixiesearch/nixiesearch:0.6.3",
             dataset=DatasetConfig(
                 dim=384,
@@ -23,6 +23,7 @@ class TestNixiesearch(EngineSuite):
             experiments=[
                 ExperimentConfig(
                     tag="test",
+                    k=10,
                     index=IndexArgsMatrix(m=[16], ef_construction=[64], quant=["float32"]),
                     search=SearchArgsMatrix(ef_search=[16], filter_selectivity=[100]),
                 )

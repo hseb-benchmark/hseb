@@ -17,7 +17,7 @@ class NixiesearchEngine(EngineBase):
     def __init__(self, config: Config):
         self.config = config
 
-    def index_batch(self, batch: list[Doc]):
+    def index_batch(self, batch: list[Doc], index_args: IndexArgs):
         start = time.perf_counter()
         payload = []
         for doc in batch:
@@ -34,7 +34,7 @@ class NixiesearchEngine(EngineBase):
 
     def commit(self):
         logger.debug(requests.post("http://localhost:8080/v1/index/test/flush"))
-        logger.info("flushing done, merging...")
+        # logger.info("flushing done")
         # logger.debug(requests.post("http://localhost:8080/v1/index/test/merge"))
         # logger.info("indexing done")
 

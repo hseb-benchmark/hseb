@@ -15,7 +15,7 @@ experiments:
     ef_construction: [16, 32]
     quant: ["float32"]
     kwargs:
-      index_buffer_size: [536870912] # 512mb
+      docs_per_segment: [12500] # 8 segments
       heap_size: ["8g"]
   search:
     ef_search: [64, 96]

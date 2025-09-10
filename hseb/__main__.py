@@ -58,7 +58,7 @@ if __name__ == "__main__":
                     batches = data.corpus_batched(index_args.batch_size)
                     total = int(len(data.corpus_dataset) / index_args.batch_size)
                     for batch in tqdm(batches, total=total, desc="indexing"):
-                        engine.index_batch(batch)
+                        engine.index_batch(batch=batch, index_args=index_args)
                     commit_start = time.perf_counter()
                     engine.commit()
                     warmup_start = time.perf_counter()
@@ -78,9 +78,11 @@ if __name__ == "__main__":
                             measurements: list[Measurement] = []
 
                             for query in tqdm(list(data.queries()), desc="search"):
-                                response = engine.search(search_args, query, 100)
-                                if len(response.results) != 100:
-                                    raise Exception("Engine returned less than 100 docs, this should never happen!")
+                                response = engine.search(search_args, query, exp.k)
+                                if len(response.results) != exp.k:
+                                    raise Exception(
+                                        f"Engine returned less than {exp.k} docs, this should never happen!"
+                                    )
                                 measurements.append(
                                     Measurement.from_response(
                                         query_id=query.id, exact=query.exact100, response=response

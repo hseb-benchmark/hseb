@@ -19,12 +19,13 @@ from qdrant_client.models import (
     CollectionStatus,
     OptimizersConfigDiff,
     HnswConfigDiff,
-    QuantizationConfigDiff,
+    ScalarQuantization,
+    BinaryQuantization,
 )
 
 QDRANT_DATATYPES = {
-    QuantDatatype.INT8: QuantizationConfigDiff(scalar=ScalarQuantizationConfig(type=ScalarType.INT8)),
-    QuantDatatype.INT1: QuantizationConfigDiff(binary=BinaryQuantizationConfig()),
+    QuantDatatype.INT8: ScalarQuantization(scalar=ScalarQuantizationConfig(type=ScalarType.INT8)),
+    QuantDatatype.INT1: BinaryQuantization(binary=BinaryQuantizationConfig()),
 }
 
 
@@ -32,7 +33,7 @@ class Qdrant(EngineBase):
     def __init__(self, config: Config):
         self.config = config
 
-    def index_batch(self, batch: list[Doc]):
+    def index_batch(self, batch: list[Doc], index_args: IndexArgs):
         points = [PointStruct(id=doc.id, vector=doc.embedding.tolist(), payload={"tag": doc.tag}) for doc in batch]
         self.client.upsert(collection_name="test", points=points)
 
