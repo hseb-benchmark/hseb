@@ -83,6 +83,7 @@ class IndexArgsMatrix(BaseModel):
 
 class QuantDatatype(StrEnum):
     FLOAT32 = "float32"
+    FLOAT16 = "float16"
     INT8 = "int8"
     INT1 = "int1"
 

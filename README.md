@@ -6,13 +6,15 @@
 ![Last commit](https://img.shields.io/github/last-commit/hseb-benchmark/hseb)
 ![Last release](https://img.shields.io/github/release/hseb-benchmark/hseb)
 
-HSEB is a fair search engine benchmarking tool that helps you pick the right engine for your use case. Unlike traditional benchmarks that use fixed parameters, HSEB recognizes that each engine has unique optimal configurations. Some engines benefit from specific HNSW parameters (`m`, `ef_construction`), while others have additional tuning options like segment sizes and memory allocation. Instead of comparing raw recall-QPS curves, HSEB finds the Pareto front of optimal configurations per engine, discovering the best QPS each engine can achieve for a given recall level through exhaustive parameter space exploration.
+HSEB is a fair search engine benchmarking tool that helps you pick the right engine for your use case. Unlike traditional benchmarks that use fixed parameters, HSEB recognizes that each engine has unique optimal configurations. Some engines benefit from specific HNSW parameters (`m`, `ef_construction`), while others have additional tuning options like segment sizes and memory allocation. 
+
+Instead of comparing raw recall-QPS curves, HSEB finds the Pareto front of optimal configurations per engine, discovering the best QPS each engine can achieve for a given recall level through exhaustive parameter space exploration.
 
 ## Features
 
-- **Multi-Engine Support**: Benchmarks Nixiesearch, Qdrant, Elasticsearch, and OpenSearch
+- **Multi-Engine Support**: Benchmarks Nixiesearch, Qdrant, Elasticsearch, OpenSearch, and PostgreSQL + pgvector
 - **Docker Containerization**: Reproducible benchmarks across environments
-- **Vector Quantization**: Compare float32, int8, and binary performance
+- **Vector Quantization**: Compare float32, float16, int8, and binary performance
 - **Parameter Testing**: Systematic HNSW configuration evaluation
 - **Filter Benchmarks**: Test search performance with different selectivity levels
 - **Latency & Recall**: Track both speed and result quality metrics
@@ -27,6 +29,7 @@ HSEB is a fair search engine benchmarking tool that helps you pick the right eng
 | **Qdrant** | 1.x | `m`, `ef_construction`, `quant`, `max_segment_size_kb`, `original_vectors_on_disk`, `hnsw_on_disk` | `ef_search`, `filter_selectivity` |
 | **Elasticsearch** | 8.x, 9.x | `m`, `ef_construction`, `quant`, `docs_per_segment`, `max_merged_segment`, `heap_size` | `ef_search`, `filter_selectivity` |
 | **OpenSearch** | 2.x, 3.x | `m`, `ef_construction`, `quant`, `docs_per_segment`, `max_merged_segment`, `heap_size` | `ef_search`, `filter_selectivity` |
+| **PostgreSQL + pgvector** | 0.8.x | `m`, `ef_construction`, `quant`, `shared_buffers`, `work_mem`, `maintenance_work_mem` | `ef_search`, `filter_selectivity` |
 
 ## Quick Start
 

@@ -24,7 +24,8 @@ dependencies = [
     "structlog",
     "qdrant-client",
     "elasticsearch",
-    "opensearch-py"
+    "opensearch-py",
+    "psycopg2-binary"
 ]
 
 [project.optional-dependencies]
