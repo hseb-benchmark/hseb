@@ -13,7 +13,7 @@ from tests.engine.base import EngineSuite
 class TestElasticengine(EngineSuite):
     def config(self) -> Config:
         return Config(
-            engine="hseb.engine.elastic.elastic.ElasticsearchEngine",
+            engine="hseb.engine.elastic.ElasticsearchEngine",
             image="elasticsearch:9.1.3",
             dataset=DatasetConfig(
                 dim=384,

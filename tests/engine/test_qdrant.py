@@ -13,7 +13,7 @@ from tests.engine.base import EngineSuite
 class TestQdrantEngine(EngineSuite):
     def config(self) -> Config:
         return Config(
-            engine="hseb.engine.qdrant.qdrant.Qdrant",
+            engine="hseb.engine.qdrant.Qdrant",
             image="qdrant/qdrant:v1.15.4",
             dataset=DatasetConfig(
                 dim=384,

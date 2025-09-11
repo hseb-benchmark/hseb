@@ -31,7 +31,7 @@ Instead of comparing raw recall-QPS curves, HSEB finds the Pareto front of optim
 | **OpenSearch** | 2.x, 3.x | `m`, `ef_construction`, `quant`, `docs_per_segment`, `max_merged_segment`, `heap_size` | `ef_search`, `filter_selectivity` |
 | **PostgreSQL + pgvector** | 0.8.x | `m`, `ef_construction`, `quant`, `shared_buffers`, `work_mem`, `maintenance_work_mem` | `ef_search`, `filter_selectivity` |
 | **Redis** | 8.x | `m`, `ef_construction`, `quant`, `maxmemory`, `maxmemory_policy` | `ef_search`, `filter_selectivity` |
-| **Weaviate** | 1.x | `m`, `ef_construction`, `quant`, `memory_limit` | `ef_search`, `filter_selectivity` |
+| **Weaviate** | 1.x | `m`, `ef_construction`, `quant` | `ef_search`, `filter_selectivity` |
 
 ## Quick Start
 
@@ -49,7 +49,7 @@ python -m hseb --config configs/opensearch/dev.yml --out results.json --delete-c
 ### Example Configuration
 
 ```yaml
-engine: hseb.engine.qdrant.qdrant.QdrantEngine
+engine: hseb.engine.qdrant.QdrantEngine
 image: qdrant/qdrant:v1.12.5
 dataset:
   dim: 384
@@ -167,7 +167,7 @@ ruff format            # Format code
 
 ### Adding New Engines
 
-1. Create `hseb/engine/yourengine/` directory
+1. Create `hseb/engine/` directory
 2. Implement the `EngineBase` interface in `yourengine.py`
 3. Add config file at `configs/yourengine/dev.yml`
 4. Add dependencies to `pyproject.toml`
