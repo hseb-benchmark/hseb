@@ -31,7 +31,7 @@ class TestWeaviateEngine(EngineSuite):
                         quant=[QuantDatatype.FLOAT32],
                     ),
                     search=SearchArgsMatrix(
-                        ef_search=[16], 
+                        ef_search=[16],
                         filter_selectivity=[100],
                     ),
                 )
