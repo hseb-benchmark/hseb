@@ -26,6 +26,7 @@ class ExperimentResult(BaseModel):
 
     def to_json(self, workdir: str):
         out_file = f"{workdir}/{self.tag}-{self.index_args.to_string()}-{self.search_args.to_string()}.json"
+        logger.info(f"Saved experiment result to {out_file}")
         with open(out_file, "w") as file:
             file.write(json.dumps(self.model_dump()))
 
@@ -60,12 +61,13 @@ class Submission(BaseModel):
     def from_dir(config: Config, path: str) -> Submission:
         experiments = []
         for file in tqdm(list(Path(path).iterdir()), desc="loading measurements"):
-            if file.is_file() and file.name.endswith(".jsonl"):
+            if file.is_file() and file.name.endswith(".json"):
                 experiments.append(ExperimentResult.from_json(file))
         try:
             hseb_version = version("hseb")
         except PackageNotFoundError:
             hseb_version = "unknown"
+        logger.info(f"Loaded {len(experiments)} experiments")
         return Submission(
             time=datetime.datetime.now().isoformat(),
             version=hseb_version,
@@ -80,5 +82,7 @@ class Submission(BaseModel):
             return Submission(**raw)
 
     def to_json(self, path: str):
+        if Path(path).exists():
+            raise Exception(f"output file {path} already exists")
         with open(path, "w") as file:
             file.write(json.dumps(self.model_dump()))

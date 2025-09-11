@@ -14,6 +14,7 @@ dataset:
 batch_size: 1024
 experiments:
   - tag: test
+    k: 10
     index:
       quant: [float32]
       m: [16]

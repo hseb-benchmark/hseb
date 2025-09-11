@@ -1,3 +1,4 @@
+import time
 from hseb.core.config import (
     Config,
     DatasetConfig,
@@ -11,12 +12,13 @@ from hseb.core.config import (
 from hseb.core.measurement import ExperimentResult, Measurement, Submission
 from hseb.core.response import DocScore
 import tempfile
+import os
 
 
 def test_submission():
     config = Config(
         engine="hseb.engine.nixiesearch.nixiesearch.NixiesearchEngine",
-        image="nixiesearch/nixiesearch:0.6.3",
+        image="nixiesearch/nixiesearch:0.6.5",
         dataset=DatasetConfig(
             dim=384,
             name="hseb-benchmark/msmarco",
@@ -32,17 +34,21 @@ def test_submission():
             )
         ],
     )
-    m = Measurement(query_id=1, exact=[DocScore(1, 1)], response=[DocScore(1, 1)], client_latency=1)
+    m1 = Measurement(query_id=1, exact=[DocScore(1, 1)], response=[DocScore(1, 1)], client_latency=1)
+    m2 = Measurement(query_id=1, exact=[DocScore(1, 1)], response=[DocScore(1, 1)], client_latency=1)
     result = ExperimentResult(
         tag="test",
         index_args=IndexArgs(m=32, ef_construction=32, quant=QuantDatatype.FLOAT32, batch_size=32, kwargs={}),
         search_args=SearchArgs(ef_search=32, filter_selectivity=100, kwargs={}),
-        measurements=[m, m, m],
+        measurements=[m1, m2],
     )
     with tempfile.TemporaryDirectory(prefix="hseb_test_") as dir:
         result.to_json(dir)
         sub = Submission.from_dir(config=config, path=dir)
-        with tempfile.NamedTemporaryFile(prefix="hseb_test_result_") as tmp_file:
-            sub.to_json(str(tmp_file.name))
-            decoded = Submission.from_json(tmp_file.name)
-            assert decoded == sub
+        assert len(sub.experiments) == 1
+        assert len(sub.experiments[0].measurements) == 2
+        export_path = os.path.join(tempfile.tempdir, f"hseb_export_test_{time.time()}.json")
+
+        sub.to_json(export_path)
+        decoded = Submission.from_json(export_path)
+        assert decoded == sub

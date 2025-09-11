@@ -39,7 +39,7 @@ if __name__ == "__main__":
     config = Config.from_file(args.config)
     data = BenchmarkDataset(config.dataset)
     engine = EngineBase.load_class(config.engine, config)
-    with tempfile.TemporaryDirectory(prefix="hseb", delete=False) as workdir:
+    with tempfile.TemporaryDirectory(prefix="hseb_", delete=False) as workdir:
         logger.info(f"Initialized engine, workdir: {workdir}")
         run_index = 0
         for exp_index, exp in enumerate(config.experiments):
@@ -73,7 +73,6 @@ if __name__ == "__main__":
                         logger.info(
                             f"Search {search_args_index + 1}/{len(search_variations)} ({run_index + 1}/{total_cases}): {search_args}"
                         )
-                        out_file = f"{workdir}/{exp.tag}-{index_args.to_string()}-{search_args.to_string()}.json"
 
                         measurements: list[Measurement] = []
 
@@ -93,7 +92,7 @@ if __name__ == "__main__":
                             search_args=search_args,
                             measurements=measurements,
                         )
-                        result.to_json(out_file)
+                        result.to_json(workdir=workdir)
 
                         run_index += 1
                     logger.debug(
