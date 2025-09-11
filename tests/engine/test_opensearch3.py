@@ -13,7 +13,7 @@ from tests.engine.base import EngineSuite
 class TestOpensearch3Engine(EngineSuite):
     def config(self) -> Config:
         return Config(
-            engine="hseb.engine.opensearch.opensearch.OpenSearchEngine",
+            engine="hseb.engine.opensearch.OpenSearchEngine",
             image="opensearchproject/opensearch:3.2.0",
             dataset=DatasetConfig(
                 dim=384,

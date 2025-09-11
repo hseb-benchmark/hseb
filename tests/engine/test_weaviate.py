@@ -13,7 +13,7 @@ from tests.engine.base import EngineSuite
 class TestWeaviateEngine(EngineSuite):
     def config(self) -> Config:
         return Config(
-            engine="hseb.engine.weaviate.weaviate.WeaviateEngine",
+            engine="hseb.engine.weaviate.WeaviateEngine",
             image="semitechnologies/weaviate:1.32.8",
             dataset=DatasetConfig(
                 dim=384,

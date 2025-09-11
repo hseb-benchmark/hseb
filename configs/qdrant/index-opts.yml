@@ -1,5 +1,5 @@
 # class name
-engine: hseb.engine.qdrant.qdrant.Qdrant
+engine: hseb.engine.qdrant.Qdrant
 image: qdrant/qdrant:v1.15.4
 dataset: 
   dim: 384

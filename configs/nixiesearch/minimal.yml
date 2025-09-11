@@ -1,4 +1,4 @@
-engine: hseb.engine.nixiesearch.nixiesearch.NixiesearchEngine
+engine: hseb.engine.nixiesearch.NixiesearchEngine
 image: nixiesearch/nixiesearch:0.6.5
 dataset: 
   dim: 384

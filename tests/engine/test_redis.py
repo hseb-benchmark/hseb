@@ -13,7 +13,7 @@ from tests.engine.base import EngineSuite
 class TestRedisEngine(EngineSuite):
     def config(self) -> Config:
         return Config(
-            engine="hseb.engine.redis.redis.RedisEngine",
+            engine="hseb.engine.redis.RedisEngine",
             image="redis:8.2.1",
             dataset=DatasetConfig(
                 dim=384,

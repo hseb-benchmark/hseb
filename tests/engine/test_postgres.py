@@ -13,7 +13,7 @@ from tests.engine.base import EngineSuite
 class TestPostgresEngine(EngineSuite):
     def config(self) -> Config:
         return Config(
-            engine="hseb.engine.postgres.postgres.PostgresEngine",
+            engine="hseb.engine.postgres.PostgresEngine",
             image="pgvector/pgvector:0.8.1-pg17-trixie",
             dataset=DatasetConfig(
                 dim=384,

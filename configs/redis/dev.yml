@@ -1,5 +1,5 @@
 # Redis 8.x with RediSearch engine configuration
-engine: hseb.engine.redis.redis.RedisEngine
+engine: hseb.engine.redis.RedisEngine
 image: redis:8.2.1
 dataset: 
   dim: 384

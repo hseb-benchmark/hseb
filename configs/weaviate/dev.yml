@@ -1,5 +1,5 @@
 # Weaviate engine configuration
-engine: hseb.engine.weaviate.weaviate.WeaviateEngine
+engine: hseb.engine.weaviate.WeaviateEngine
 image: semitechnologies/weaviate:1.32.8
 dataset: 
   dim: 384
