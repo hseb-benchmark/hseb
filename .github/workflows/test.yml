@@ -30,7 +30,7 @@ jobs:
     
     - name: Run tests
       run: |
-        pytest --skip-slow
+        pytest
     
     - name: Run linting
       run: |
