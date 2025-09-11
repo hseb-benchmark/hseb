@@ -26,14 +26,10 @@ class TestPostgresEngine(EngineSuite):
                     tag="test",
                     k=10,
                     index=IndexArgsMatrix(
-                        m=[16], 
-                        ef_construction=[64], 
+                        m=[16],
+                        ef_construction=[64],
                         quant=[QuantDatatype.FLOAT32],
-                        kwargs={
-                            "shared_buffers": ["2GB"],
-                            "work_mem": ["16MB"],
-                            "maintenance_work_mem": ["512MB"]
-                        }
+                        kwargs={"shared_buffers": ["2GB"], "work_mem": ["16MB"], "maintenance_work_mem": ["512MB"]},
                     ),
                     search=SearchArgsMatrix(ef_search=[16], filter_selectivity=[100]),
                 )

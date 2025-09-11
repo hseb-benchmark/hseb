@@ -78,7 +78,7 @@ Experiments are defined in YAML files (see `configs/nixiesearch/dev.yml`) with:
 Each engine implementation inherits from `EngineBase` and implements:
 - `start(index_args)`: Start containerized engine (uses Docker Python client)  
 - `stop()`: Stop and cleanup engine container
-- `index_batch(batch, index_args)`: Index a batch of documents with embeddings
+- `index_batch(batch)`: Index a batch of documents with embeddings
 - `commit()`: Finalize indexing (flush, merge segments)
 - `search(search_args, query, top_k)`: Execute vector search, return Response with results and latency
 

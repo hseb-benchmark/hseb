@@ -11,8 +11,8 @@ experiments:
 - tag: test
   k: 100
   index:
-    m: [8, 16]
-    ef_construction: [16, 32]
+    m: [16]
+    ef_construction: [32]
     quant: ["float32", "float16"]
     kwargs:
       shared_buffers: ["2GB"]

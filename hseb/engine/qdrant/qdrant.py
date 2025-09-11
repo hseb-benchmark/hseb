@@ -33,7 +33,7 @@ class Qdrant(EngineBase):
     def __init__(self, config: Config):
         self.config = config
 
-    def index_batch(self, batch: list[Doc], index_args: IndexArgs):
+    def index_batch(self, batch: list[Doc]):
         points = [PointStruct(id=doc.id, vector=doc.embedding.tolist(), payload={"tag": doc.tag}) for doc in batch]
         self.client.upsert(collection_name="test", points=points)
 

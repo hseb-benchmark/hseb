@@ -173,7 +173,7 @@ ruff format            # Format code
 
 Your engine needs these methods:
 - `start(index_args)` - Start the containerized engine
-- `index_batch(batch, index_args)` - Index a batch of documents
+- `index_batch(batch)` - Index a batch of documents
 - `commit()` - Finish indexing
 - `search(search_args, query, top_k)` - Run a vector search
 - `stop()` - Clean up

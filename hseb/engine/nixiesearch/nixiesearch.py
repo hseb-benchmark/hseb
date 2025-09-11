@@ -17,7 +17,7 @@ class NixiesearchEngine(EngineBase):
     def __init__(self, config: Config):
         self.config = config
 
-    def index_batch(self, batch: list[Doc], index_args: IndexArgs):
+    def index_batch(self, batch: list[Doc]):
         start = time.perf_counter()
         payload = []
         for doc in batch:
@@ -32,7 +32,7 @@ class NixiesearchEngine(EngineBase):
         if response.status_code != 200:
             raise Exception(response.text)
         self.docs_in_segment += len(batch)
-        if self.docs_in_segment >= index_args.kwargs.get("docs_per_segment", 1024):
+        if self.docs_in_segment >= self.index_args.kwargs.get("docs_per_segment", 1024):
             requests.post("http://localhost:8080/v1/index/test/flush")
             self.docs_in_segment = 0
 
@@ -63,6 +63,7 @@ class NixiesearchEngine(EngineBase):
         return Response(results=results, client_latency=(end - start) / 1000000000.0)
 
     def start(self, index_args: IndexArgs):
+        self.index_args = index_args
         engine_config_file = {
             "schema": {
                 "test": {

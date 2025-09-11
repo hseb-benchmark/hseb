@@ -96,7 +96,7 @@ class RedisEngine(EngineBase):
     def commit(self):
         pass
 
-    def index_batch(self, batch: list[Doc], index_args: IndexArgs):
+    def index_batch(self, batch: list[Doc]):
         pipe = self.client.pipeline()
 
         for doc in batch:
@@ -104,9 +104,16 @@ class RedisEngine(EngineBase):
             doc_key = f"doc:{doc.id}"
             # Convert tag array to comma-separated string for Redis TagField
             tag_str = ",".join(map(str, doc.tag))
+
+            # Use the same dtype as the index was created with
+            if self.index_args.quant == QuantDatatype.FLOAT16:
+                embedding_bytes = doc.embedding.astype("float16").tobytes()
+            else:
+                embedding_bytes = doc.embedding.astype("float32").tobytes()
+
             doc_data = {
                 "text": doc.text,
-                "embedding": doc.embedding.astype("float32").tobytes(),  # Ensure float32 and convert to bytes
+                "embedding": embedding_bytes,
                 "tag": tag_str,  # Store tags as comma-separated string
             }
             pipe.hset(doc_key, mapping=doc_data)
@@ -114,8 +121,11 @@ class RedisEngine(EngineBase):
         pipe.execute()
 
     def search(self, search_params: SearchArgs, query: Query, top_k: int) -> Response:
-        # Build KNN query
-        query_vector = query.embedding.astype("float32").tobytes()
+        # Build KNN query - use the same dtype as the index was created with
+        if self.index_args.quant == QuantDatatype.FLOAT16:
+            query_vector = query.embedding.astype("float16").tobytes()
+        else:
+            query_vector = query.embedding.astype("float32").tobytes()
 
         # Create base query with AS clause for scoring
         base_query = f"(*)=>[KNN {top_k} @embedding $query_vector AS vector_score]"

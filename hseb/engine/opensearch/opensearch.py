@@ -23,6 +23,7 @@ class OpenSearchEngine(EngineBase):
         self.config = config
 
     def start(self, index_args: IndexArgs):
+        self.index_args = index_args
         docker_client = docker.from_env()
         heap_size = index_args.kwargs.get("heap_size", "8g")
         self.container = docker_client.containers.run(
@@ -87,7 +88,7 @@ class OpenSearchEngine(EngineBase):
     def commit(self):
         self.client.indices.refresh(index="test")
 
-    def index_batch(self, batch: list[Doc], index_args: IndexArgs):
+    def index_batch(self, batch: list[Doc]):
         actions = []
         for doc in batch:
             actions.append(
@@ -103,7 +104,7 @@ class OpenSearchEngine(EngineBase):
             )
         helpers.bulk(self.client, actions)
         self.docs_in_segment += len(batch)
-        if self.docs_in_segment >= index_args.kwargs.get("docs_per_segment", 1024):
+        if self.docs_in_segment >= self.index_args.kwargs.get("docs_per_segment", 1024):
             self.client.indices.refresh(index="test")
             self.docs_in_segment = 0
 

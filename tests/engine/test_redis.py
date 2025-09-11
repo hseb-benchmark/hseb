@@ -26,13 +26,10 @@ class TestRedisEngine(EngineSuite):
                     tag="test",
                     k=10,
                     index=IndexArgsMatrix(
-                        m=[16], 
-                        ef_construction=[64], 
+                        m=[16],
+                        ef_construction=[64],
                         quant=[QuantDatatype.FLOAT32],
-                        kwargs={
-                            "maxmemory": ["2gb"],
-                            "maxmemory_policy": ["allkeys-lru"]
-                        }
+                        kwargs={"maxmemory": ["2gb"], "maxmemory_policy": ["allkeys-lru"]},
                     ),
                     search=SearchArgsMatrix(ef_search=[16], filter_selectivity=[100]),
                 )

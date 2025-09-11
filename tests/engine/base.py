@@ -30,7 +30,7 @@ class EngineSuite(ABC):
                 try:
                     engine.start(index_args)
                     for batch in data.corpus_batched(index_args.batch_size):
-                        engine.index_batch(batch, index_args)
+                        engine.index_batch(batch)
 
                     engine.commit()
                     for search_args in exp.search.expand():

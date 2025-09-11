@@ -5,8 +5,6 @@ from hseb.core.config import Config
 from hseb.core.dataset import BenchmarkDataset
 from hseb.core.measurement import ExperimentResult, Measurement, Submission
 from tqdm import tqdm
-import json
-from dataclasses import asdict
 from structlog import get_logger
 import tempfile
 
@@ -58,7 +56,7 @@ if __name__ == "__main__":
                     batches = data.corpus_batched(index_args.batch_size)
                     total = int(len(data.corpus_dataset) / index_args.batch_size)
                     for batch in tqdm(batches, total=total, desc="indexing"):
-                        engine.index_batch(batch=batch, index_args=index_args)
+                        engine.index_batch(batch=batch)
                     commit_start = time.perf_counter()
                     engine.commit()
                     warmup_start = time.perf_counter()
