@@ -8,16 +8,16 @@
 
 HSEB benchmarks search engines to help you pick the right one for your use case. Right now it focuses on vector search, but we're planning to add sparse and lexical search too.
 
-## Use Cases
+## Features
 
-### Research & Academia
-Compare different algorithms and publish reproducible results. HSEB runs everything in Docker containers so your benchmarks work the same way on different machines. You can test how HNSW parameters affect search quality, compare float32 vs int8 vs binary vectors, and generate performance charts for papers.
-
-### Industry & Production
-Figure out which search engine to use and how to configure it. HSEB helps with vendor selection, capacity planning, and finding the best settings for your workload. You can also analyze costs and performance trade-offs.
-
-### Algorithm Development
-Add your own search engine implementation and test it against the competition. The configuration system makes it easy to test different parameter combinations and see how filtering affects performance.
+- **Multi-Engine Support**: Benchmarks Nixiesearch, Qdrant, Elasticsearch, and OpenSearch
+- **Docker Containerization**: Reproducible benchmarks across environments
+- **Vector Quantization**: Compare float32, int8, and binary performance
+- **Parameter Testing**: Systematic HNSW configuration evaluation
+- **Filter Benchmarks**: Test search performance with different selectivity levels
+- **Latency & Recall**: Track both speed and result quality metrics
+- **Custom Datasets**: Process your own data with any embedding model
+- **Extensible**: Easy to add new search engines
 
 ## Supported Engines
 
