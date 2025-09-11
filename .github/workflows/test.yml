@@ -26,16 +26,16 @@ jobs:
     
     - name: Install dependencies
       run: |
-        uv pip install -e .[test]
+        uv pip install -e .[test] --system
     
     - name: Run tests
       run: |
-        uv run pytest --skip-slow
+        pytest --skip-slow
     
     - name: Run linting
       run: |
-        uv run ruff check
+        ruff check
     
     - name: Check formatting
       run: |
-        uv run ruff format --check
+        ruff format --check
