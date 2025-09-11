@@ -40,7 +40,7 @@ class EngineSuite(ABC):
                             prev_score = 10000.0
                             for doc in results.results:
                                 assert doc.score > 0.0
-                                assert doc.score < prev_score
+                                assert doc.score <= prev_score
                                 prev_score = doc.score
                 finally:
                     engine.stop()

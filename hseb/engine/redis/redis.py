@@ -156,10 +156,10 @@ class RedisEngine(EngineBase):
         for i, result in enumerate(results.docs):
             # Extract document ID from key (doc:123 -> 123)
             # Handle both string and bytes for document ID
-            doc_key = result.id.decode() if isinstance(result.id, bytes) else result.id
+            doc_key = result.id
             doc_id = int(doc_key.split(":")[1])
             # Redis returns similarity score in vector_score field
-            score = float(result.vector_score) if hasattr(result, "vector_score") else 0.0
+            score = float(result.vector_score)
             doc_scores.append(DocScore(doc=doc_id, score=score))
 
         return Response(
