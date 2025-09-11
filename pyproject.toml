@@ -25,7 +25,8 @@ dependencies = [
     "qdrant-client",
     "elasticsearch",
     "opensearch-py",
-    "psycopg2-binary"
+    "psycopg2-binary",
+    "redis[hiredis]"
 ]
 
 [project.optional-dependencies]

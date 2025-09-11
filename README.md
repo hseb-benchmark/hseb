@@ -12,7 +12,7 @@ Instead of comparing raw recall-QPS curves, HSEB finds the Pareto front of optim
 
 ## Features
 
-- **Multi-Engine Support**: Benchmarks Nixiesearch, Qdrant, Elasticsearch, OpenSearch, and PostgreSQL + pgvector
+- **Multi-Engine Support**: Benchmarks Nixiesearch, Qdrant, Elasticsearch, OpenSearch, PostgreSQL + pgvector, and Redis
 - **Docker Containerization**: Reproducible benchmarks across environments
 - **Vector Quantization**: Compare float32, float16, int8, and binary performance
 - **Parameter Testing**: Systematic HNSW configuration evaluation
@@ -30,6 +30,7 @@ Instead of comparing raw recall-QPS curves, HSEB finds the Pareto front of optim
 | **Elasticsearch** | 8.x, 9.x | `m`, `ef_construction`, `quant`, `docs_per_segment`, `max_merged_segment`, `heap_size` | `ef_search`, `filter_selectivity` |
 | **OpenSearch** | 2.x, 3.x | `m`, `ef_construction`, `quant`, `docs_per_segment`, `max_merged_segment`, `heap_size` | `ef_search`, `filter_selectivity` |
 | **PostgreSQL + pgvector** | 0.8.x | `m`, `ef_construction`, `quant`, `shared_buffers`, `work_mem`, `maintenance_work_mem` | `ef_search`, `filter_selectivity` |
+| **Redis** | 8.x | `m`, `ef_construction`, `quant`, `maxmemory`, `maxmemory_policy` | `ef_search`, `filter_selectivity` |
 
 ## Quick Start
 
