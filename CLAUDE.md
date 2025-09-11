@@ -27,53 +27,82 @@ ruff format            # Format code
 
 ### Benchmarking Operations
 ```bash
-python -m hseb.index --corpus path/to/corpus.json --engine nixiesearch
-python -m hseb.search --engine nixiesearch --queries path/to/queries.json
+# Run full benchmark with config file
+python -m hseb --config configs/nixiesearch/dev.yml --out results.json
+
+# Optional: cleanup containers after benchmark
+python -m hseb --config configs/nixiesearch/dev.yml --out results.json --delete-container true
 ```
 
 ## Architecture
 
 ### Core Components
 
-- **hseb/core/**: Configuration management and response models
-  - `config.py`: YAML-based experiment configuration (quantization, HNSW parameters)
-  - `response.py`: Search result response wrapper
+- **hseb/core/**: Core benchmarking infrastructure
+  - `config.py`: YAML-based experiment configuration with parameter matrices
+  - `dataset.py`: HuggingFace dataset loading and batching for corpus/queries
+  - `measurement.py`: Result collection (ExperimentResult, Submission classes)
+  - `response.py`: Search result wrapper with latency tracking
+  - `stats.py`: Statistical analysis utilities
 
 - **hseb/engine/**: Search engine abstraction layer
-  - `base.py`: Abstract base class defining index() and search() interface
-  - `nixiesearch.py`: Nixiesearch implementation using Docker containers via docker python client
-  - `__init__.py`: Engine factory for loading different backends
+  - `base.py`: Abstract base class with start(), stop(), index_batch(), search() interface
+  - `nixiesearch/nixiesearch.py`: Nixiesearch implementation using Docker containers
+  - `qdrant/qdrant.py`: Qdrant implementation 
+  - `elastic/elastic.py`: Elasticsearch implementation
 
-- **hseb/**: Main execution scripts
-  - `index.py`: Corpus indexing with embeddings and metadata
-  - `search.py`: Query execution and recall calculation
-  - `preprocess.py`: Data preprocessing utilities
+- **hseb/__main__.py**: Main benchmarking execution orchestrating index + search phases
+- **hseb/preprocess.py**: Data preprocessing utilities
+
+### Benchmarking Workflow
+
+The main benchmark (`__main__.py`) follows this execution pattern:
+1. **Configuration Loading**: Loads YAML config defining engine, dataset, and experiment parameters
+2. **Parameter Matrix Expansion**: Generates all combinations from IndexArgsMatrix and SearchArgsMatrix
+3. **Index Phase**: For each index configuration, starts engine container, indexes corpus in batches, commits
+4. **Search Phase**: For each search configuration, runs warmup queries then measures all test queries
+5. **Result Collection**: Gathers measurements into ExperimentResult objects and final Submission
 
 ### Configuration System
 
-Experiments are defined in YAML files (see `configs/nixiesearch.yml`) with:
-- Engine selection (nixiesearch, qdrant, elastic)
-- Batch size for indexing operations
-- HNSW parameters: quantization type, M parameter, efConstruction, efSearch
+Experiments are defined in YAML files (see `configs/nixiesearch/dev.yml`) with:
+- Engine selection via fully-qualified class name (e.g., `hseb.engine.nixiesearch.nixiesearch.NixiesearchEngine`)
+- Docker image specification for containerized engines
+- Dataset configuration (HuggingFace dataset name, embedding dimension)
+- Parameter matrices for systematic benchmarking:
+  - `IndexArgsMatrix`: m, ef_construction, quantization, batch_size, plus engine-specific kwargs
+  - `SearchArgsMatrix`: ef_search, filter_selectivity, plus engine-specific kwargs
 
 ### Search Engine Integration
 
-Each engine implementation:
-- Inherits from `EngineBase`
-- Implements containerized deployment (Nixiesearch uses Docker via docker python client)
-- Handles batch indexing with configurable batch sizes
-- Returns structured `Response` objects with latency metrics
+Each engine implementation inherits from `EngineBase` and implements:
+- `start(index_args)`: Start containerized engine (uses Docker Python client)  
+- `stop()`: Stop and cleanup engine container
+- `index_batch(batch, index_args)`: Index a batch of documents with embeddings
+- `commit()`: Finalize indexing (flush, merge segments)
+- `search(search_args, query, top_k)`: Execute vector search, return Response with results and latency
+
+Engine instances are dynamically loaded via `EngineBase.load_class()` from config.engine string.
 
 ### Dataset Schema
 
-Uses HuggingFace datasets with predefined features:
-- Documents: id, text, embedding (float32[]), tag (int32[])  
-- Queries: same fields plus results_N for different recall@N ground truth
+Uses HuggingFace datasets with predefined schemas defined in `dataset.py`:
+
+**CORPUS_SCHEMA**: Documents with id (int32), text (string), embedding (float32[]), tag (int32[])
+**QUERY_SCHEMA**: Queries with same fields plus ground truth results for recall calculation:
+- results_10_docs/scores, results_90_docs/scores, results_100_docs/scores
+
+The `BenchmarkDataset` class loads corpus/query datasets and provides:
+- `corpus_batched(batch_size)`: Generator yielding Doc batches for indexing
+- `queries()`: Generator yielding Query objects with ground truth for evaluation
 
 ## Key Dependencies
 
-- `sentence_transformers`: Embedding model inference
-- `datasets`: HuggingFace dataset handling
-- `docker`: Docker container management for search engines
-- `faiss-cpu`: Vector similarity operations
-- `typed-argparse`: CLI argument parsing
+- `datasets`: HuggingFace dataset loading and processing
+- `docker`: Container management for search engines
+- `pydantic`: Configuration validation and data models
+- `structlog`: Structured logging throughout the benchmark
+- `qdrant-client`, `elasticsearch`: Client libraries for respective search engines
+- `faiss-cpu`: Vector similarity operations for recall calculations
+- `sentence_transformers`: Not directly used (embeddings come from dataset)
+- `typed-argparse`: CLI parsing

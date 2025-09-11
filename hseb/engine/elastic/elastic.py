@@ -105,6 +105,7 @@ class ElasticsearchEngine(EngineBase):
             "query_vector": query.embedding.tolist(),
             "k": top_k,
             "num_candidates": search_params.ef_search,
+            "_source": False,
         }
         if search_params.filter_selectivity != 100:
             es_query["filter"] = {"terms": {"tag": [search_params.filter_selectivity]}}

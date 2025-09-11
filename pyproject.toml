@@ -23,7 +23,8 @@ dependencies = [
     "pydantic",
     "structlog",
     "qdrant-client",
-    "elasticsearch"
+    "elasticsearch",
+    "opensearch-py"
 ]
 
 [project.optional-dependencies]

@@ -3,6 +3,7 @@ from hseb.core.config import (
     ExperimentConfig,
     DatasetConfig,
     IndexArgsMatrix,
+    QuantDatatype,
     SearchArgsMatrix,
 )
 
@@ -24,7 +25,7 @@ class TestQdrantEngine(EngineSuite):
                 ExperimentConfig(
                     tag="test",
                     k=10,
-                    index=IndexArgsMatrix(m=[16], ef_construction=[64], quant=["float32"]),
+                    index=IndexArgsMatrix(m=[16], ef_construction=[64], quant=[QuantDatatype.FLOAT32]),
                     search=SearchArgsMatrix(ef_search=[16], filter_selectivity=[100]),
                 )
             ],

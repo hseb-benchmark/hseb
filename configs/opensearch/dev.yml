@@ -1,0 +1,23 @@
+# class name
+engine: hseb.engine.opensearch.opensearch.OpenSearchEngine
+image: opensearchproject/opensearch:2.17.0
+dataset: 
+  dim: 384
+  name: hseb-benchmark/msmarco
+  query: "query-all-MiniLM-L6-v2-100K"
+  corpus: "corpus-all-MiniLM-L6-v2-100K"
+batch_size: 1024
+experiments:
+- tag: test
+  k: 100
+  index:
+    m: [8, 16]
+    ef_construction: [16, 32]
+    quant: ["float32"]
+    kwargs:
+      docs_per_segment: [12500] # 8 segments
+      max_merged_segment: ["128mb"]
+      heap_size: ["8g"]
+  search:
+    ef_search: [128, 256]
+    filter_selectivity: [10, 90, 100]

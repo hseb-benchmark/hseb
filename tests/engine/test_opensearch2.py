@@ -10,11 +10,11 @@ from hseb.core.config import (
 from tests.engine.base import EngineSuite
 
 
-class TestElasticengine(EngineSuite):
+class TestOpensearch2Engine(EngineSuite):
     def config(self) -> Config:
         return Config(
-            engine="hseb.engine.elastic.elastic.ElasticsearchEngine",
-            image="elasticsearch:9.1.3",
+            engine="hseb.engine.opensearch.opensearch.OpenSearchEngine",
+            image="opensearchproject/opensearch:2.19.2",
             dataset=DatasetConfig(
                 dim=384,
                 name="hseb-benchmark/msmarco",
