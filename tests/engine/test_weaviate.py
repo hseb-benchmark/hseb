@@ -10,11 +10,11 @@ from hseb.core.config import (
 from tests.engine.base import EngineSuite
 
 
-class TestPostgresEngine(EngineSuite):
+class TestWeaviateEngine(EngineSuite):
     def config(self) -> Config:
         return Config(
-            engine="hseb.engine.postgres.postgres.PostgresEngine",
-            image="pgvector/pgvector:0.8.1-pg17-trixie",
+            engine="hseb.engine.weaviate.weaviate.WeaviateEngine",
+            image="semitechnologies/weaviate:1.32.8",
             dataset=DatasetConfig(
                 dim=384,
                 name="hseb-benchmark/msmarco",
@@ -30,7 +30,10 @@ class TestPostgresEngine(EngineSuite):
                         ef_construction=[64],
                         quant=[QuantDatatype.FLOAT32],
                     ),
-                    search=SearchArgsMatrix(ef_search=[16], filter_selectivity=[100]),
+                    search=SearchArgsMatrix(
+                        ef_search=[16], 
+                        filter_selectivity=[100],
+                    ),
                 )
             ],
         )

@@ -1,0 +1,19 @@
+# Weaviate engine configuration
+engine: hseb.engine.weaviate.weaviate.WeaviateEngine
+image: semitechnologies/weaviate:1.32.8
+dataset: 
+  dim: 384
+  name: hseb-benchmark/msmarco
+  query: "query-all-MiniLM-L6-v2-1K"
+  corpus: "corpus-all-MiniLM-L6-v2-1K"
+batch_size: 1024
+experiments:
+- tag: test
+  k: 100
+  index:
+    m: [8, 16]
+    ef_construction: [16, 32]
+    quant: ["float32"]
+  search:
+    ef_search: [128, 256]
+    filter_selectivity: [10, 90, 100]
