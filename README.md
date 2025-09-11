@@ -6,7 +6,7 @@
 ![Last commit](https://img.shields.io/github/last-commit/hseb-benchmark/hseb)
 ![Last release](https://img.shields.io/github/release/hseb-benchmark/hseb)
 
-HSEB benchmarks search engines to help you pick the right one for your use case. Right now it focuses on vector search, but we're planning to add sparse and lexical search too.
+HSEB is a fair search engine benchmarking tool that helps you pick the right engine for your use case. Unlike traditional benchmarks that use fixed parameters, HSEB recognizes that each engine has unique optimal configurations. Some engines benefit from specific HNSW parameters (`m`, `ef_construction`), while others have additional tuning options like segment sizes and memory allocation. Instead of comparing raw recall-QPS curves, HSEB finds the Pareto front of optimal configurations per engine, discovering the best QPS each engine can achieve for a given recall level through exhaustive parameter space exploration.
 
 ## Features
 
@@ -21,12 +21,12 @@ HSEB benchmarks search engines to help you pick the right one for your use case.
 
 ## Supported Engines
 
-| Engine | Version | Container | Quantization |
-|--------|---------|-----------|--------------|
-| **Nixiesearch** | 0.6.x | Docker | float32, int8, binary |
-| **Qdrant** | 1.x | Docker | float32, int8, binary |
-| **Elasticsearch** | 8.x, 9.x | Docker | float32, int8, binary |
-| **OpenSearch** | 2.x, 3.x | Docker | float32, int8, binary |
+| Engine | Version | Index Parameters | Search Parameters |
+|--------|---------|------------------|-------------------|
+| **Nixiesearch** | 0.6.x | `m`, `ef_construction`, `quant`, `docs_per_segment`, `heap_size`, `ram_buffer_size` | `ef_search`, `filter_selectivity` |
+| **Qdrant** | 1.x | `m`, `ef_construction`, `quant`, `max_segment_size_kb`, `original_vectors_on_disk`, `hnsw_on_disk` | `ef_search`, `filter_selectivity` |
+| **Elasticsearch** | 8.x, 9.x | `m`, `ef_construction`, `quant`, `docs_per_segment`, `max_merged_segment`, `heap_size` | `ef_search`, `filter_selectivity` |
+| **OpenSearch** | 2.x, 3.x | `m`, `ef_construction`, `quant`, `docs_per_segment`, `max_merged_segment`, `heap_size` | `ef_search`, `filter_selectivity` |
 
 ## Quick Start
 
