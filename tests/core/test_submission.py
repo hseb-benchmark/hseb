@@ -42,6 +42,7 @@ def test_submission():
         search_args=SearchArgs(ef_search=32, filter_selectivity=100, kwargs={}),
         measurements=[m1, m2],
         indexing_time=1,
+        warmup_latencies=[1],
     )
     with tempfile.TemporaryDirectory(prefix="hseb_test_") as dir:
         result.to_json(dir)
