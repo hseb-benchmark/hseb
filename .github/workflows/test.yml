@@ -25,17 +25,16 @@ jobs:
       uses: astral-sh/setup-uv@v3
     
     - name: Install dependencies
-      run: |
-        uv pip install -e .[test] --system
+      run: uv pip install -e .[test] --system
     
     - name: Run tests
-      run: |
-        pytest
-    
+      run: pytest
+
+    - name: Run e2e test
+      run: python -m hseb --config tests/ci.yml --out ci.json
+
     - name: Run linting
-      run: |
-        ruff check
+      run: ruff check
     
     - name: Check formatting
-      run: |
-        ruff format --check
+      run: ruff format --check
