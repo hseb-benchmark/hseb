@@ -41,6 +41,7 @@ def test_submission():
         index_args=IndexArgs(m=32, ef_construction=32, quant=QuantDatatype.FLOAT32, batch_size=32, kwargs={}),
         search_args=SearchArgs(ef_search=32, filter_selectivity=100, kwargs={}),
         measurements=[m1, m2],
+        indexing_time=1,
     )
     with tempfile.TemporaryDirectory(prefix="hseb_test_") as dir:
         result.to_json(dir)
