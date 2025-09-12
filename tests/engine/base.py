@@ -35,8 +35,8 @@ class EngineSuite(ABC):
                     engine.commit()
                     for search_args in exp.search.expand():
                         for query in tqdm(list(data.queries())[:10], desc="searching"):
-                            results = engine.search(search_args, query, 10)
-                            assert len(results.results) == 10
+                            results = engine.search(search_args, query, 16)
+                            assert len(results.results) == 16
                             prev_score = 10000.0
                             for doc in results.results:
                                 assert doc.score > 0.0
