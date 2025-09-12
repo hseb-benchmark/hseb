@@ -14,6 +14,7 @@ logger = get_logger()
 
 class ExperimentResult(BaseModel):
     tag: str
+    indexing_time: float
     index_args: IndexArgs
     search_args: SearchArgs
     measurements: list[Measurement]
@@ -26,7 +27,7 @@ class ExperimentResult(BaseModel):
 
     def to_json(self, workdir: str):
         out_file = f"{workdir}/{self.tag}-{self.index_args.to_string()}-{self.search_args.to_string()}.json"
-        logger.info(f"Saved experiment result to {out_file}")
+        # logger.debug(f"Saved experiment result to {out_file}")
         with open(out_file, "w") as file:
             file.write(json.dumps(self.model_dump()))
 
