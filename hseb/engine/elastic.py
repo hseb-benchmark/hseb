@@ -110,7 +110,7 @@ class ElasticsearchEngine(EngineBase):
         if search_params.filter_selectivity != 100:
             es_query["filter"] = {"terms": {"tag": [search_params.filter_selectivity]}}
         start = time.time_ns()
-        response = self.client.search(index="test", knn=es_query, source=["_id"])
+        response = self.client.search(index="test", knn=es_query, source=["_id"], size=top_k)
         end = time.time_ns()
         return Response(
             results=[DocScore(doc=int(doc["_id"]), score=doc["_score"]) for doc in response["hits"]["hits"]],
