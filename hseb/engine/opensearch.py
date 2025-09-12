@@ -132,6 +132,6 @@ class OpenSearchEngine(EngineBase):
         response = self.client.search(index="test", body=search_body)
         end = time.time_ns()
         return Response(
-            results=[DocScore(doc=doc["_id"], score=doc["_score"]) for doc in response["hits"]["hits"]],
+            results=[DocScore(doc=int(doc["_id"]), score=doc["_score"]) for doc in response["hits"]["hits"]],
             client_latency=(end - start) / 1000000000.0,
         )

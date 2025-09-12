@@ -41,6 +41,7 @@ class EngineSuite(ABC):
                             for doc in results.results:
                                 assert doc.score > 0.0
                                 assert doc.score <= prev_score
+                                assert isinstance(doc.doc, int)
                                 prev_score = doc.score
                 finally:
                     engine.stop()

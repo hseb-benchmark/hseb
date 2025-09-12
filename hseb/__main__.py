@@ -51,10 +51,10 @@ if __name__ == "__main__":
             for indexing_args_index, index_args in enumerate(index_variations):
                 logger.info(f"Indexing run {indexing_args_index + 1}/{len(index_variations)}: {index_args}")
                 try:
-                    index_start = time.perf_counter()
                     engine.start(index_args)
                     batches = data.corpus_batched(index_args.batch_size)
                     total = int(len(data.corpus_dataset) / index_args.batch_size)
+                    index_start = time.perf_counter()
                     for batch in tqdm(batches, total=total, desc="indexing"):
                         engine.index_batch(batch=batch)
                     commit_start = time.perf_counter()
@@ -89,6 +89,7 @@ if __name__ == "__main__":
                             index_args=index_args,
                             search_args=search_args,
                             measurements=measurements,
+                            indexing_time=warmup_start - index_start,
                         )
                         result.to_json(workdir=workdir)
 
