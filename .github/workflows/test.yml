@@ -3,9 +3,6 @@ name: Tests
 on:
   pull_request:
     branches: [ master ]
-  push:
-    branches: [ master ]
-    tags: [ '*' ]
   workflow_call:
 
 jobs:
