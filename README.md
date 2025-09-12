@@ -181,7 +181,7 @@ Your engine needs these methods:
 
 ## Requirements
 
-- Python 3.11+
+- Python 3.12+
 - Docker (for running search engines)
 - 8GB+ RAM (16GB recommended for large datasets)
 - Storage varies by dataset (usually 1-10GB per experiment)
