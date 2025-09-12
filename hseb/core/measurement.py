@@ -18,6 +18,7 @@ class ExperimentResult(BaseModel):
     index_args: IndexArgs
     search_args: SearchArgs
     measurements: list[Measurement]
+    warmup_latencies: list[float]
 
     @staticmethod
     def from_json(path: str) -> ExperimentResult:

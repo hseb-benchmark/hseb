@@ -13,6 +13,7 @@ def test_write_read():
         search_args=SearchArgs(ef_search=32, filter_selectivity=100, kwargs={}),
         measurements=[m],
         indexing_time=1,
+        warmup_latencies=[1],
     )
     with tempfile.TemporaryDirectory(prefix="hseb_test_") as dir:
         result.to_json(dir)

@@ -63,9 +63,11 @@ if __name__ == "__main__":
                     logger.info(
                         f"Index built in {warmup_start - index_start} seconds (ingest={int(commit_start - index_start)} commit={int(warmup_start - commit_start)})"
                     )
-
+                    warmup_latencies: list[float] = []
                     for warmup_query in tqdm(list(data.queries()), desc="warmup"):
                         response = engine.search(search_variations[0], warmup_query, exp.k)
+                        warmup_latencies.append(response.client_latency)
+
                     logger.info(f"Warmup done in {time.perf_counter() - warmup_start} seconds")
                     for search_args_index, search_args in enumerate(search_variations):
                         logger.info(
