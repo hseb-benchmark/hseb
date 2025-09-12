@@ -35,28 +35,30 @@ jobs:
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ hashFiles('**/uv.lock') }}
         restore-keys: |
           ${{ runner.os }}-python-${{ matrix.python-version }}-
+    - name: make venv
+      run: uv venv
 
     - name: Install dependencies
-      run: uv sync --extra test --system
+      run: PATH=".venv/bin:$PATH" uv sync --extra test
     
     - name: Run tests
-      run: pytest
+      run: PATH=".venv/bin:$PATH" pytest
 
     - name: Run e2e test
-      run: python -m hseb --config tests/ci.yml --out ci.json
+      run: PATH=".venv/bin:$PATH" python -m hseb --config tests/ci.yml --out ci.json
 
     - name: Run linting
-      run: ruff check
+      run: PATH=".venv/bin:$PATH" ruff check
     
     - name: Check formatting
-      run: ruff format --check
+      run: PATH=".venv/bin:$PATH" ruff format --check
 
     - name: Build package
       if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && matrix.python-version == '3.12'
-      run: uv build
+      run: PATH=".venv/bin:$PATH" uv build
     
     - name: Publish to PyPI
       if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && matrix.python-version == '3.12'
-      run: uv publish
+      run: PATH=".venv/bin:$PATH" uv publish
       env:
         UV_PUBLISH_TOKEN: ${{ secrets.PYPI_KEY }}
