@@ -1,5 +1,5 @@
-engine: hseb.engine.elastic.ElasticsearchEngine
-image: elasticsearch:9.1.3
+engine: hseb.engine.qdrant.Qdrant
+image: qdrant/qdrant:v1.15.4
 dataset: 
   dim: 384
   name: hseb-benchmark/msmarco
@@ -10,11 +10,9 @@ experiments:
 - tag: test
   k: 32
   index:
-    m: [8]
+    m: [16]
     ef_construction: [16]
     quant: ["float32"]
-    kwargs:
-      heap_size: ["8g"]
   search:
     ef_search: [32]
     filter_selectivity: [100]
