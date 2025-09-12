@@ -8,7 +8,7 @@ dataset:
 batch_size: 1024
 experiments:
 - tag: test
-  k: 100
+  k: 32
   index:
     m: [8]
     ef_construction: [16]

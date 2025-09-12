@@ -1,0 +1,20 @@
+engine: hseb.engine.qdrant.Qdrant
+image: qdrant/qdrant:v1.15.4
+dataset: 
+  dim: 384
+  name: hseb-benchmark/msmarco
+  query: "query-all-MiniLM-L6-v2-100K"
+  corpus: "corpus-all-MiniLM-L6-v2-100K"
+batch_size: 1024
+experiments:
+- tag: small
+  k: 32
+  index:
+    m: [8, 16, 32, 64, 128]
+    ef_construction: [32, 64, 128, 256, 512]
+    quant: ["float32"]
+    kwargs:
+      max_segment_size_kb: [20480]
+  search:
+    ef_search: [32, 64, 96, 128, 192, 256]
+    filter_selectivity: [10, 90, 100]
