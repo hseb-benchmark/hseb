@@ -48,7 +48,8 @@ class NixiesearchEngine(EngineBase):
                 "knn": {
                     "field": "text",
                     "query_vector": query.embedding.tolist(),
-                    "k": search_params.ef_search,
+                    "num_candidates": search_params.ef_search,
+                    "k": top_k,
                 }
             },
             "size": top_k,

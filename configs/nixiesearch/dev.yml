@@ -1,6 +1,6 @@
 # class name
 engine: hseb.engine.nixiesearch.NixiesearchEngine
-image: nixiesearch/nixiesearch:0.6.5
+image: nixiesearch/nixiesearch:0.6.6
 dataset: 
   dim: 384
   name: hseb-benchmark/msmarco
