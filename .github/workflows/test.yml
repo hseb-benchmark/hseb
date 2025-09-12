@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) && 'release' || '' }}
     permissions:
-      id-token: ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) && 'write' || 'read' }}
+      id-token: write
     strategy:
       matrix:
         python-version: ["3.12", "3.13"]
