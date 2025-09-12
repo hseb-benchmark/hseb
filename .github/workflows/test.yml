@@ -10,9 +10,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    environment: ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) && 'release' || '' }}
-    permissions:
-      id-token: write
     strategy:
       matrix:
         python-version: ["3.12", "3.13"]
@@ -21,7 +18,7 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     
@@ -35,6 +32,7 @@ jobs:
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ hashFiles('**/uv.lock') }}
         restore-keys: |
           ${{ runner.os }}-python-${{ matrix.python-version }}-
+
     - name: make venv
       run: uv venv
 
@@ -52,13 +50,3 @@ jobs:
     
     - name: Check formatting
       run: PATH=".venv/bin:$PATH" ruff format --check
-
-    - name: Build package
-      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && matrix.python-version == '3.12'
-      run: PATH=".venv/bin:$PATH" uv build
-    
-    - name: Publish to PyPI
-      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && matrix.python-version == '3.12'
-      run: PATH=".venv/bin:$PATH" uv publish
-      env:
-        UV_PUBLISH_TOKEN: ${{ secrets.PYPI_KEY }}
