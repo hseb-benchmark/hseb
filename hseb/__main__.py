@@ -90,6 +90,7 @@ if __name__ == "__main__":
                             search_args=search_args,
                             measurements=measurements,
                             indexing_time=warmup_start - index_start,
+                            warmup_latencies=warmup_latencies,
                         )
                         result.to_json(workdir=workdir)
 
