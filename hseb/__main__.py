@@ -41,6 +41,8 @@ if __name__ == "__main__":
         logger.info(f"Initialized engine, workdir: {workdir}")
         run_index = 0
         for exp_index, exp in enumerate(config.experiments):
+            index_fails = 0
+            search_fails = 0
             index_variations = exp.index.expand()
             search_variations = exp.search.expand()
             total_cases = len(index_variations) * len(search_variations)
@@ -59,50 +61,59 @@ if __name__ == "__main__":
                         engine.index_batch(batch=batch)
                     commit_start = time.perf_counter()
                     engine.commit()
-                    warmup_start = time.perf_counter()
-                    logger.info(
-                        f"Index built in {warmup_start - index_start} seconds (ingest={int(commit_start - index_start)} commit={int(warmup_start - commit_start)})"
-                    )
-                    warmup_latencies: list[float] = []
-                    for warmup_query in tqdm(list(data.queries()), desc="warmup"):
-                        response = engine.search(search_variations[0], warmup_query, exp.k)
-                        warmup_latencies.append(response.client_latency)
-
-                    logger.info(f"Warmup done in {time.perf_counter() - warmup_start} seconds")
-                    for search_args_index, search_args in enumerate(search_variations):
+                    try:
+                        warmup_start = time.perf_counter()
                         logger.info(
-                            f"Search {search_args_index + 1}/{len(search_variations)} ({run_index + 1}/{total_cases}): {search_args}"
+                            f"Index built in {warmup_start - index_start} seconds (ingest={int(commit_start - index_start)} commit={int(warmup_start - commit_start)})"
                         )
+                        warmup_latencies: list[float] = []
+                        for warmup_query in tqdm(list(data.queries()), desc="warmup"):
+                            response = engine.search(search_variations[0], warmup_query, exp.k)
+                            warmup_latencies.append(response.client_latency)
 
-                        measurements: list[Measurement] = []
-
-                        for query in tqdm(list(data.queries()), desc="search"):
-                            response = engine.search(search_args, query, exp.k)
-                            if len(response.results) != exp.k:
-                                logger.warn(
-                                    f"Engine returned {len(response.results)} docs, which less than {exp.k} docs expected"
-                                )
-                            measurements.append(
-                                Measurement.from_response(query_id=query.id, exact=query.exact100, response=response)
+                        logger.info(f"Warmup done in {time.perf_counter() - warmup_start} seconds")
+                        for search_args_index, search_args in enumerate(search_variations):
+                            logger.info(
+                                f"Search {search_args_index + 1}/{len(search_variations)} ({run_index + 1}/{total_cases}): {search_args}"
                             )
 
-                        result = ExperimentResult(
-                            tag=exp.tag,
-                            index_args=index_args,
-                            search_args=search_args,
-                            measurements=measurements,
-                            indexing_time=warmup_start - index_start,
-                            warmup_latencies=warmup_latencies,
-                        )
-                        result.to_json(workdir=workdir)
+                            measurements: list[Measurement] = []
 
-                        run_index += 1
+                            for query in tqdm(list(data.queries()), desc="search"):
+                                response = engine.search(search_args, query, exp.k)
+                                if len(response.results) != exp.k:
+                                    logger.warn(
+                                        f"Engine returned {len(response.results)} docs, which less than {exp.k} docs expected"
+                                    )
+                                measurements.append(
+                                    Measurement.from_response(
+                                        query_id=query.id, exact=query.exact100, response=response
+                                    )
+                                )
+
+                            result = ExperimentResult(
+                                tag=exp.tag,
+                                index_args=index_args,
+                                search_args=search_args,
+                                measurements=measurements,
+                                indexing_time=warmup_start - index_start,
+                                warmup_latencies=warmup_latencies,
+                            )
+                            result.to_json(workdir=workdir)
+
+                            run_index += 1
+                    except Exception:
+                        logger.error(f"skipping search run {search_args}")
+                        search_fails += 1
                     logger.debug(
                         f"Indexing run {indexing_args_index + 1}/{len(index_variations)} done in {time.perf_counter() - index_start} seconds"
                     )
+                except Exception:
+                    logger.error(f"skipping index run {index_args}")
+                    index_fails += 1
                 finally:
                     engine.stop()
         submission = Submission.from_dir(config=config, path=workdir)
         logger.info(f"Writing submission file to {args.out}")
         submission.to_json(args.out)
-        logger.info("Benchmark finished.")
+        logger.info(f"Experiment finished. {index_fails} index fails, {search_fails} search fails.")
