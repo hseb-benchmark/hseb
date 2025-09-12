@@ -1,6 +1,6 @@
 # HSEB: Hybrid Search Engine Benchmark
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/hseb-benchmark/hseb)
 ![Last commit](https://img.shields.io/github/last-commit/hseb-benchmark/hseb)
@@ -37,6 +37,23 @@ Instead of comparing raw recall-QPS curves, HSEB finds the Pareto front of optim
 
 ```bash
 # Install
+pip install hseb
+
+# Download a config file from the repository
+wget https://raw.githubusercontent.com/hseb-benchmark/hseb/main/configs/qdrant/dev.yml
+
+# Run a benchmark
+python -m hseb --config dev.yml --out results.json --delete-container true
+```
+
+You can choose from any of the [available configs](https://github.com/hseb-benchmark/hseb/tree/main/configs) for different engines (qdrant, elastic, nixiesearch, etc).
+
+## Development Installation
+
+```bash
+# Clone and install for development
+git clone https://github.com/hseb-benchmark/hseb.git
+cd hseb
 pip install -e .[test]
 
 # Run a benchmark
@@ -167,17 +184,110 @@ ruff format            # Format code
 
 ### Adding New Engines
 
-1. Create `hseb/engine/` directory
-2. Implement the `EngineBase` interface in `yourengine.py`
-3. Add config file at `configs/yourengine/dev.yml`
-4. Add dependencies to `pyproject.toml`
+Create a new engine by inheriting from `EngineBase`:
 
-Your engine needs these methods:
-- `start(index_args)` - Start the containerized engine
-- `index_batch(batch)` - Index a batch of documents
-- `commit()` - Finish indexing
-- `search(search_args, query, top_k)` - Run a vector search
-- `stop()` - Clean up
+```python
+# my_custom_engine.py
+import docker
+import time
+from hseb.engine.base import EngineBase
+from hseb.core.config import Config, IndexArgs, SearchArgs
+from hseb.core.dataset import Doc, Query
+from hseb.core.response import Response, DocScore
+
+class MyCustomEngine(EngineBase):
+    def __init__(self, config: Config):
+        self.config = config
+        self.container = None
+        self.client = None
+
+    def start(self, index_args: IndexArgs):
+        # Start your engine's Docker container
+        docker_client = docker.from_env()
+        self.container = docker_client.containers.run(
+            image=self.config.image,
+            ports={"9200/tcp": 9200},  # Adjust ports as needed
+            detach=True,
+        )
+        
+        # Wait for engine to be ready
+        self._wait_for_logs(self.container, "started")
+        
+        # Initialize your client
+        # self.client = YourEngineClient(host="localhost", port=9200)
+        
+        # Create index/collection with HNSW parameters
+        # self.client.create_index(...)
+        
+
+    def index_batch(self, batch: list[Doc]):
+        # Index a batch of documents
+        for doc in batch:
+            # self.client.index_document(...)
+
+    def commit(self):
+        # Finalize indexing (flush, optimize, etc.)
+        # self.client.refresh_index("benchmark")
+
+    def search(self, search_args: SearchArgs, query: Query, top_k: int) -> Response:
+        
+        # Build filter for selectivity testing
+        filter_query = None
+        if search_args.filter_selectivity != 100:
+            # filter_query = {"term": {"tag": search_args.filter_selectivity}}
+            pass
+        
+        start_time = time.time_ns()
+
+        # Execute vector search
+        # results = self.client.search(...)
+        
+        end_time = time.time_ns()
+        
+        # Convert results to hseb format
+        doc_scores = []  # [DocScore(hit.id, hit.score) for hit in results]
+        
+        return Response(
+            results=doc_scores,
+            client_latency=(end_time - start_time) / 1000000000.0
+        )
+
+    def stop(self):
+        # Clean up container
+        if self.container:
+            self.container.stop()
+            self.container.remove()
+```
+
+**Example config file (my_engine_config.yml):**
+
+```yaml
+engine: my_custom_engine.MyCustomEngine
+image: my-search-engine:latest
+dataset:
+  dim: 384
+  name: hseb-benchmark/msmarco
+  query: "query-all-MiniLM-L6-v2-100K"
+  corpus: "corpus-all-MiniLM-L6-v2-100K"
+
+experiments:
+- tag: test
+  k: 100
+  index:
+    m: [16, 32]
+    ef_construction: [128, 256]
+    quant: ["float32"]
+  search:
+    ef_search: [128, 256]
+    filter_selectivity: [10, 90, 100]
+```
+
+**Install engine-specific dependencies:**
+
+```bash
+pip install your-engine-client-library
+python -m hseb --config my_engine_config.yml --out results.json
+```
 
 ## Requirements
 
