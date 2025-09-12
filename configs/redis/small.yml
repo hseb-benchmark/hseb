@@ -1,0 +1,21 @@
+engine: hseb.engine.redis.RedisEngine
+image: redis:8.2.1
+dataset: 
+  dim: 384
+  name: hseb-benchmark/msmarco
+  query: "query-all-MiniLM-L6-v2-100K"
+  corpus: "corpus-all-MiniLM-L6-v2-100K"
+batch_size: 1024
+experiments:
+- tag: test
+  k: 32
+  index:
+    m: [8, 16, 32, 64, 128]
+    ef_construction: [32, 64, 128, 256, 512]
+    quant: ["float32"]
+    kwargs:
+      maxmemory: ["8gb"]
+      maxmemory_policy: ["allkeys-lru"]
+  search:
+    ef_search: [32, 64, 96, 128, 192, 256]
+    filter_selectivity: [10, 90, 100]
