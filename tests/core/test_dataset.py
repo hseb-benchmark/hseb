@@ -13,5 +13,5 @@ class TestDataset:
         ds = BenchmarkDataset(conf)
         assert len(ds.corpus_dataset) == 1000
         assert len(list(ds.corpus_batched(100))) == 10
-        assert len(ds.query_dataset) == 1000
-        assert len(list(ds.queries())) == 1000
+        assert len(ds.query_dataset) == 10000
+        assert len(list(ds.queries())) == 10000
