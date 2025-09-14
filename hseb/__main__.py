@@ -1,9 +1,10 @@
 import argparse
 import time
+from hseb.core.submission import Submission
 from hseb.engine.base import EngineBase
 from hseb.core.config import Config
 from hseb.core.dataset import BenchmarkDataset
-from hseb.core.measurement import ExperimentResult, Measurement, Submission
+from hseb.core.measurement import ExperimentResult, QueryResult
 from tqdm import tqdm
 from structlog import get_logger
 import tempfile
@@ -57,8 +58,12 @@ if __name__ == "__main__":
                     batches = data.corpus_batched(index_args.batch_size)
                     total = int(len(data.corpus_dataset) / index_args.batch_size)
                     index_start = time.perf_counter()
+                    index_batch_times: list[float] = []
                     for batch in tqdm(batches, total=total, desc="indexing"):
+                        batch_start = time.perf_counter()
                         engine.index_batch(batch=batch)
+                        batch_end = time.perf_counter()
+                        index_batch_times.append(batch_end - batch_start)
                     commit_start = time.perf_counter()
                     engine.commit()
                     try:
@@ -77,7 +82,7 @@ if __name__ == "__main__":
                                 f"Search {search_args_index + 1}/{len(search_variations)} ({run_index + 1}/{total_cases}): {search_args}"
                             )
 
-                            measurements: list[Measurement] = []
+                            measurements: list[QueryResult] = []
 
                             for query in tqdm(list(data.queries()), desc="search"):
                                 response = engine.search(search_args, query, exp.k)
@@ -86,7 +91,7 @@ if __name__ == "__main__":
                                         f"Engine returned {len(response.results)} docs, which less than {exp.k} docs expected"
                                     )
                                 measurements.append(
-                                    Measurement.from_response(
+                                    QueryResult.from_response(
                                         query_id=query.id, exact=query.exact100, response=response
                                     )
                                 )
@@ -95,8 +100,8 @@ if __name__ == "__main__":
                                 tag=exp.tag,
                                 index_args=index_args,
                                 search_args=search_args,
-                                measurements=measurements,
-                                indexing_time=warmup_start - index_start,
+                                queries=measurements,
+                                indexing_time=index_batch_times,
                                 warmup_latencies=warmup_latencies,
                             )
                             result.to_json(workdir=workdir)
