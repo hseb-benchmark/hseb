@@ -14,7 +14,7 @@ class TestNixiesearch(EngineSuite):
     def config(self) -> Config:
         return Config(
             engine="hseb.engine.nixiesearch.NixiesearchEngine",
-            image="nixiesearch/nixiesearch:0.6.6",
+            image="nixiesearch/nixiesearch:0.7.0",
             dataset=DatasetConfig(
                 dim=384,
                 name="hseb-benchmark/msmarco",
