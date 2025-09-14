@@ -28,26 +28,22 @@ class ExperimentMetrics(BaseModel):
     warmup_latencies: list[float]
 
     @staticmethod
-    def recall_score(
-        true_doc_scores: list[float], retrieved_doc_scores: list[float], k: int, epsilon: float = 1e-3
-    ) -> float:
-        # based on ann-benchmark code
-        k_eff = min(k, len(true_doc_scores))
-        threshold = true_doc_scores[k_eff - 1] + epsilon
-
-        # Count how many of the top-k ANN results fall within this threshold
-        hits = sum(1 for d in retrieved_doc_scores[:k_eff] if d <= threshold)
-        return hits / float(k_eff)
+    def recall_score(true_docs: list[int], retrieved_docs: list[int], k: int) -> float:
+        k_adj = min(k, len(retrieved_docs), len(true_docs))
+        retrieved_set = set(retrieved_docs[:k_adj])
+        true_set = set(true_docs[:k_adj])
+        hits = len(retrieved_set.intersection(true_set))
+        return hits / float(len(true_set))
 
     @staticmethod
     def from_experiment(exp: ExperimentResult) -> ExperimentMetrics:
         metrics = QueryMetrics()
         for query in exp.queries:
-            ground_truth = [doc.score for doc in query.exact]
-            retrieved_scores = [doc.score for doc in query.response]
-            metrics.recall5.append(ExperimentMetrics.recall_score(ground_truth, retrieved_scores, 5))
-            metrics.recall10.append(ExperimentMetrics.recall_score(ground_truth, retrieved_scores, 10))
-            metrics.recall30.append(ExperimentMetrics.recall_score(ground_truth, retrieved_scores, 30))
+            ground_truth = [doc.doc for doc in query.exact]
+            retrieved_docs = [doc.doc for doc in query.response]
+            metrics.recall5.append(ExperimentMetrics.recall_score(ground_truth, retrieved_docs, 5))
+            metrics.recall10.append(ExperimentMetrics.recall_score(ground_truth, retrieved_docs, 10))
+            metrics.recall30.append(ExperimentMetrics.recall_score(ground_truth, retrieved_docs, 30))
             metrics.latency.append(query.client_latency)
         return ExperimentMetrics(
             tag=exp.tag,
