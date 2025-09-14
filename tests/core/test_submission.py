@@ -59,5 +59,5 @@ def test_submission():
 
 
 def test_recall():
-    r1 = ExperimentMetrics.recall_score([1, 2, 3, 4], [1, 2, 4, 5])
+    r1 = ExperimentMetrics.recall_score([1, 2, 3, 4], [1, 2, 4, 5], 4)
     assert r1 == 0.75
