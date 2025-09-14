@@ -1,13 +1,9 @@
 from __future__ import annotations
 from pydantic import BaseModel
 from hseb.core.response import DocScore, Response
-from hseb.core.config import Config, IndexArgs, SearchArgs
+from hseb.core.config import IndexArgs, SearchArgs
 
-from pathlib import Path
 import json
-from tqdm import tqdm
-from importlib.metadata import PackageNotFoundError, version
-import datetime
 from structlog import get_logger
 
 logger = get_logger()
