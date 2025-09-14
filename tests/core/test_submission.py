@@ -9,10 +9,12 @@ from hseb.core.config import (
     SearchArgs,
     SearchArgsMatrix,
 )
-from hseb.core.measurement import ExperimentResult, Measurement, Submission
+from hseb.core.measurement import ExperimentResult, QueryResult
 from hseb.core.response import DocScore
 import tempfile
 import os
+
+from hseb.core.submission import ExperimentMetrics, Submission
 
 
 def test_submission():
@@ -34,23 +36,28 @@ def test_submission():
             )
         ],
     )
-    m1 = Measurement(query_id=1, exact=[DocScore(1, 1)], response=[DocScore(1, 1)], client_latency=1)
-    m2 = Measurement(query_id=1, exact=[DocScore(1, 1)], response=[DocScore(1, 1)], client_latency=1)
+    m1 = QueryResult(query_id=1, exact=[DocScore(1, 1)], response=[DocScore(1, 1)], client_latency=1)
+    m2 = QueryResult(query_id=1, exact=[DocScore(1, 1)], response=[DocScore(1, 1)], client_latency=1)
     result = ExperimentResult(
         tag="test",
         index_args=IndexArgs(m=32, ef_construction=32, quant=QuantDatatype.FLOAT32, batch_size=32, kwargs={}),
         search_args=SearchArgs(ef_search=32, filter_selectivity=100, kwargs={}),
-        measurements=[m1, m2],
-        indexing_time=1,
+        queries=[m1, m2],
+        indexing_time=[1],
         warmup_latencies=[1],
     )
     with tempfile.TemporaryDirectory(prefix="hseb_test_") as dir:
         result.to_json(dir)
         sub = Submission.from_dir(config=config, path=dir)
         assert len(sub.experiments) == 1
-        assert len(sub.experiments[0].measurements) == 2
+        assert len(sub.experiments[0].metrics.latency) == 2
         export_path = os.path.join(tempfile.tempdir, f"hseb_export_test_{time.time()}.json")
 
         sub.to_json(export_path)
         decoded = Submission.from_json(export_path)
         assert decoded == sub
+
+
+def test_recall():
+    r1 = ExperimentMetrics.recall_score([1, 2, 3, 4], [1, 2, 4, 5], 4)
+    assert r1 == 0.75

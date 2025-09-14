@@ -32,7 +32,7 @@ class Config(BaseModel):
 class DatasetConfig(BaseModel):
     dim: int = Field(gt=0)
     name: str
-    query: str = Field(description="queries dataset namr")
+    query: str = Field(description="queries dataset name")
     corpus: str = Field(description="corpus dataset name")
 
 

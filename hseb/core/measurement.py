@@ -1,23 +1,20 @@
 from __future__ import annotations
 from pydantic import BaseModel
 from hseb.core.response import DocScore, Response
-from hseb.core.config import Config, IndexArgs, SearchArgs
-from structlog import get_logger
-from pathlib import Path
+from hseb.core.config import IndexArgs, SearchArgs
+
 import json
-from tqdm import tqdm
-from importlib.metadata import PackageNotFoundError, version
-import datetime
+from structlog import get_logger
 
 logger = get_logger()
 
 
 class ExperimentResult(BaseModel):
     tag: str
-    indexing_time: float
+    indexing_time: list[float]
     index_args: IndexArgs
     search_args: SearchArgs
-    measurements: list[Measurement]
+    queries: list[QueryResult]
     warmup_latencies: list[float]
 
     @staticmethod
@@ -33,7 +30,7 @@ class ExperimentResult(BaseModel):
             file.write(json.dumps(self.model_dump()))
 
 
-class Measurement(BaseModel):
+class QueryResult(BaseModel):
     query_id: int
     exact: list[DocScore]
     response: list[DocScore]
@@ -44,47 +41,10 @@ class Measurement(BaseModel):
         query_id: int,
         exact: list[DocScore],
         response: Response,
-    ) -> Measurement:
-        return Measurement(
+    ) -> QueryResult:
+        return QueryResult(
             query_id=query_id,
             exact=exact,
             response=response.results,
             client_latency=response.client_latency,
         )
-
-
-class Submission(BaseModel):
-    time: str
-    version: str
-    config: Config
-    experiments: list[ExperimentResult]
-
-    @staticmethod
-    def from_dir(config: Config, path: str) -> Submission:
-        experiments = []
-        for file in tqdm(list(Path(path).iterdir()), desc="loading measurements"):
-            if file.is_file() and file.name.endswith(".json"):
-                experiments.append(ExperimentResult.from_json(file))
-        try:
-            hseb_version = version("hseb")
-        except PackageNotFoundError:
-            hseb_version = "unknown"
-        logger.info(f"Loaded {len(experiments)} experiments")
-        return Submission(
-            time=datetime.datetime.now().isoformat(),
-            version=hseb_version,
-            config=config,
-            experiments=experiments,
-        )
-
-    @staticmethod
-    def from_json(path: str) -> Submission:
-        with open(path, "r") as file:
-            raw = json.loads(file.read())
-            return Submission(**raw)
-
-    def to_json(self, path: str):
-        if Path(path).exists():
-            raise Exception(f"output file {path} already exists")
-        with open(path, "w") as file:
-            file.write(json.dumps(self.model_dump()))
