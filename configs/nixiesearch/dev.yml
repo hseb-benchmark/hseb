@@ -15,9 +15,9 @@ experiments:
     ef_construction: [16]
     quant: ["float32"]  
     kwargs:
-      docs_per_segment: 12500
+      docs_per_segment: [12500]
     #   docs_per_segment: [12500]
-    #   heap_size: ["8g"]
+      heap_size: ["8g"]
   search:
     ef_search: [16]
     filter_selectivity: [100]
