@@ -65,6 +65,7 @@ class Qdrant(EngineBase):
             search_params=SearchParams(
                 hnsw_ef=search_params.ef_search,
                 indexed_only=True,  # to avoid fullscans over memtable
+                exact=False,
             ),
             limit=top_k,
         )
@@ -100,6 +101,7 @@ class Qdrant(EngineBase):
             ),
             optimizers_config=OptimizersConfigDiff(
                 max_segment_size=index_args.kwargs.get("max_segment_size_kb", None),
+                default_segment_number=index_args.kwargs.get("default_segment_number", None),
             ),
         )
         return self
