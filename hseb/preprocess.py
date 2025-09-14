@@ -43,7 +43,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--queries", required=True, type=str, help="path to queries.json")
     parser.add_argument(
-        "--queries-sample", required=False, type=int, default=1000, help="number of queries to randomly sample"
+        "--queries-sample", required=False, type=int, default=10000, help="number of queries to randomly sample"
     )
     parser.add_argument("--corpus", required=True, type=str, help="path to corpus.json")
     parser.add_argument(
@@ -85,7 +85,7 @@ if __name__ == "__main__":
         show_progress_bar=True,
         batch_size=args.batch_size,
         normalize_embeddings=True,
-        device=["cuda:0", "cuda:1"],
+        # device=["cuda:0", "cuda:1"],
     )
     queries = queries.map(
         function=partial(zip_embed, query_embeds),
@@ -100,7 +100,7 @@ if __name__ == "__main__":
         show_progress_bar=True,
         batch_size=args.batch_size,
         normalize_embeddings=True,
-        device=["cuda:0", "cuda:1"],
+        # device=["cuda:0", "cuda:1"],
     )
     corpus = corpus.map(
         function=partial(zip_embed, corpus_embeds),
