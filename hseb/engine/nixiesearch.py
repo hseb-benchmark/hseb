@@ -69,8 +69,13 @@ class NixiesearchEngine(EngineBase):
             "schema": {
                 "test": {
                     "config": {
-                        "flush": {"interval": "1h"},
-                        "ramBufferSize": index_args.kwargs.get("ram_buffer_size", "512mb"),
+                        "indexer": {
+                            "flush": {"interval": "1h"},
+                            "merge_policy": {
+                                "doc_count": {"max_merge_docs": index_args.kwargs.get("docs_per_segment", 12500)}
+                            },
+                            "ram_buffer_size": index_args.kwargs.get("ram_buffer_size", "512mb"),
+                        }
                     },
                     "fields": {
                         "text": {
