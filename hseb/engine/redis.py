@@ -87,11 +87,13 @@ class RedisEngine(EngineBase):
         self.index_args = index_args
         return self
 
-    def stop(self):
+    def stop(self, cleanup: bool):
         if self.client:
             self.client.close()
         if self.container:
             self.container.stop()
+        if cleanup:
+            self.container.remove()
 
     def commit(self):
         pass

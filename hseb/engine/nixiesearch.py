@@ -115,7 +115,8 @@ class NixiesearchEngine(EngineBase):
         self.docs_in_segment = 0
         return self
 
-    def stop(self):
+    def stop(self, cleanup: bool):
         self.container.stop()
         self.dir.cleanup()
-        return False
+        if cleanup:
+            self.container.remove()

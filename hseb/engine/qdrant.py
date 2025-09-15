@@ -106,6 +106,7 @@ class Qdrant(EngineBase):
         )
         return self
 
-    def stop(self):
+    def stop(self, cleanup: bool):
         self.container.stop()
-        return False
+        if cleanup:
+            self.container.remove()
