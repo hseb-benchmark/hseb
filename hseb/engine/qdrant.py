@@ -104,7 +104,7 @@ class Qdrant(EngineBase):
             ),
             optimizers_config=OptimizersConfigDiff(
                 max_segment_size=index_args.kwargs.get("max_segment_size_kb", None),
-                default_segment_number=index_args.kwargs.get("default_segment_number", None),
+                default_segment_number=index_args.kwargs.get("default_segment_number", index_args.segments),
             ),
         )
         return self

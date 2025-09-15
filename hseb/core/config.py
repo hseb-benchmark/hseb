@@ -49,6 +49,7 @@ class IndexArgs:
     ef_construction: int
     quant: QuantDatatype
     batch_size: int
+    segments: int | None  # none means default
     kwargs: dict[str, Any]
 
     def to_string(self) -> str:
@@ -62,11 +63,13 @@ class IndexArgsMatrix(BaseModel):
     ef_construction: list[int]
     quant: list[QuantDatatype]
     batch_size: int = 1024
+    segments: list[int] | None = Field(default=None)
     kwargs: dict[str, list] = Field(default_factory=dict)
 
     def expand(self) -> list[IndexArgs]:
         """Generate all permutations of parameters from IndexArgs."""
-        base_params = product(self.m, self.ef_construction, self.quant)
+        segments_list = [None] if self.segments is None or len(self.segments) == 0 else self.segments
+        base_params = product(self.m, self.ef_construction, self.quant, segments_list)
         kwargs_combos = product(*self.kwargs.values()) if self.kwargs else [()]
 
         return [
@@ -75,9 +78,10 @@ class IndexArgsMatrix(BaseModel):
                 ef_construction=ef,
                 quant=quant,
                 batch_size=self.batch_size,
+                segments=segments,
                 kwargs=dict(zip(self.kwargs.keys(), kwarg_vals)),
             )
-            for (m, ef, quant), kwarg_vals in product(base_params, kwargs_combos)
+            for (m, ef, quant, segments), kwarg_vals in product(base_params, kwargs_combos)
         ]
 
 

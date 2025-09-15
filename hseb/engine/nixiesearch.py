@@ -33,17 +33,17 @@ class NixiesearchEngine(EngineBase):
         logger.debug(f"Indexed batch of {len(batch)} docs in {time.perf_counter() - start} sec")
         if response.status_code != 200:
             raise Exception(response.text)
-        self.docs_in_segment += len(batch)
-        if self.docs_in_segment >= self.index_args.kwargs.get("docs_per_segment", 1024):
-            requests.post("http://localhost:8080/v1/index/test/flush")
-            self.docs_in_segment = 0
+        if "refresh_every" in self.index_args.kwargs:
+            self.docs_in_segment += len(batch)
+            if self.docs_in_segment >= self.index_args.kwargs["refresh_every"]:
+                requests.post("http://localhost:8080/v1/index/test/flush")
+                self.docs_in_segment = 0
         return IndexResponse(client_latency=end - start)
 
     def commit(self):
         logger.debug(requests.post("http://localhost:8080/v1/index/test/flush"))
-        # logger.info("flushing done")
-        # logger.debug(requests.post("http://localhost:8080/v1/index/test/merge"))
-        # logger.info("indexing done")
+        if self.index_args.segments is not None:
+            requests.post("http://localhost:8080/v1/index/test/merge", json={"segments": self.index_args.segments})
 
     def search(self, search_params: SearchArgs, query: Query, top_k: int) -> SearchResponse:
         payload = {
@@ -68,18 +68,15 @@ class NixiesearchEngine(EngineBase):
 
     def start(self, index_args: IndexArgs):
         self.index_args = index_args
+        indexer_config = {"ram_buffer_size": index_args.kwargs.get("ram_buffer_size", "512mb")}
+        if "refresh_every" in index_args.kwargs:
+            indexer_config["flush"] = {"interval": "1h"}  # manual control
+        if "max_merge_docs" in index_args.kwargs:
+            indexer_config["merge_policy"] = {"doc_count": {"max_merge_docs": index_args.kwargs["max_merge_docs"]}}
         engine_config_file = {
             "schema": {
                 "test": {
-                    "config": {
-                        "indexer": {
-                            "flush": {"interval": "1h"},
-                            "merge_policy": {
-                                "doc_count": {"max_merge_docs": index_args.kwargs.get("docs_per_segment", 12500)}
-                            },
-                            "ram_buffer_size": index_args.kwargs.get("ram_buffer_size", "512mb"),
-                        }
-                    },
+                    "config": {"indexer": indexer_config},
                     "fields": {
                         "text": {
                             "type": "text",

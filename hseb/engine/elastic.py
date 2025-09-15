@@ -44,14 +44,14 @@ class ElasticsearchEngine(EngineBase):
         )
         self._wait_for_logs(self.container, "is selected as the current health node")
         self.client = Elasticsearch("http://localhost:9200", request_timeout=30)
+        # we control segment size by calling refresh
+        settings = {"index": {"refresh_interval": "1h"}}
+        if "max_merged_segment" in index_args.kwargs:
+            settings["merge"] = {"policy": {"max_merged_segment": index_args.kwargs["max_merged_segment"]}}
+
         self.client.indices.create(
             index="test",
-            settings={
-                "index": {
-                    "refresh_interval": "1h",
-                    "merge": {"policy": {"max_merged_segment": index_args.kwargs.get("max_merged_segment", "128mb")}},
-                },
-            },  # we control segment size
+            settings=settings,
             mappings={
                 "properties": {
                     # "_id": {"type": "integer"},
@@ -81,6 +81,12 @@ class ElasticsearchEngine(EngineBase):
 
     def commit(self):
         self.client.indices.refresh(index="test")
+        if self.index_args.segments is not None:
+            self.client.indices.forcemerge(
+                index="test",
+                max_num_segments=self.index_args.segments,
+                wait_for_completion=True,
+            )
 
     def index_batch(self, batch: list[Doc]) -> IndexResponse:
         actions = []

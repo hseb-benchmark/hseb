@@ -32,6 +32,9 @@ class WeaviateEngine(EngineBase):
         self.collection_name = "TestCollection"
 
     def start(self, index_args: IndexArgs):
+        if index_args.segments is not None:
+            raise ValueError("Weaviate cannot set number of segments")
+
         docker_client = docker.from_env()
 
         self.container = docker_client.containers.run(

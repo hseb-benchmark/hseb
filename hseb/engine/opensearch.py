@@ -47,17 +47,17 @@ class OpenSearchEngine(EngineBase):
             ssl_show_warn=False,
             timeout=30,
         )
+        index_params = {"knn": True}
+        if "refresh_every" in index_args.kwargs:
+            index_params["refresh_interval"] = "1h"
+        if "max_merged_segment" in index_args.kwargs:
+            index_params["merge"] = {"policy": {"max_merged_segment": index_args.kwargs["max_merged_segment"]}}
+
         self.client.indices.create(
             index="test",
             body={
                 "settings": {
-                    "index": {
-                        "knn": True,
-                        "refresh_interval": "1h",
-                        "merge": {
-                            "policy": {"max_merged_segment": index_args.kwargs.get("max_merged_segment", "128mb")}
-                        },
-                    },
+                    "index": index_params,
                 },
                 "mappings": {
                     "properties": {
@@ -89,6 +89,14 @@ class OpenSearchEngine(EngineBase):
 
     def commit(self):
         self.client.indices.refresh(index="test")
+        if self.index_args.segments is not None:
+            self.client.indices.forcemerge(
+                index="test",
+                params={
+                    "max_num_segments": self.index_args.segments,
+                    "wait_for_completion": True,
+                },
+            )
 
     def index_batch(self, batch: list[Doc]) -> IndexResponse:
         actions = []

@@ -15,8 +15,7 @@ experiments:
     ef_construction: [16, 32]
     quant: ["float32"]
     kwargs:
-      docs_per_segment: [12500] # 8 segments
-      max_merged_segment: ["128mb"]
+      refresh_every: [10000]
       heap_size: ["8g"]
   search:
     ef_search: [128, 256]
