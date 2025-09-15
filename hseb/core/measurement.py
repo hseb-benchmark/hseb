@@ -1,6 +1,6 @@
 from __future__ import annotations
 from pydantic import BaseModel
-from hseb.core.response import DocScore, Response
+from hseb.core.response import DocScore, SearchResponse
 from hseb.core.config import IndexArgs, SearchArgs
 
 import json
@@ -40,7 +40,7 @@ class QueryResult(BaseModel):
     def from_response(
         query_id: int,
         exact: list[DocScore],
-        response: Response,
+        response: SearchResponse,
     ) -> QueryResult:
         return QueryResult(
             query_id=query_id,

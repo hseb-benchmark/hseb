@@ -6,7 +6,7 @@ from elasticsearch import Elasticsearch, helpers
 
 from hseb.core.config import Config, IndexArgs, QuantDatatype, SearchArgs
 from hseb.core.dataset import Doc, Query
-from hseb.core.response import DocScore, Response
+from hseb.core.response import DocScore, IndexResponse, SearchResponse
 from hseb.engine.base import EngineBase
 
 logger = logging.getLogger()
@@ -82,7 +82,7 @@ class ElasticsearchEngine(EngineBase):
     def commit(self):
         self.client.indices.refresh(index="test")
 
-    def index_batch(self, batch: list[Doc]):
+    def index_batch(self, batch: list[Doc]) -> IndexResponse:
         actions = []
         for doc in batch:
             actions.append(
@@ -96,13 +96,16 @@ class ElasticsearchEngine(EngineBase):
                     "_id": doc.id,
                 }
             )
+        start = time.perf_counter()
         helpers.bulk(self.client, actions)
+        end = time.perf_counter()
         self.docs_in_segment += len(batch)
         if self.docs_in_segment >= self.index_args.kwargs.get("docs_per_segment", 1024):
             self.client.indices.refresh(index="test")
             self.docs_in_segment = 0
+        return IndexResponse(client_latency=end - start)
 
-    def search(self, search_params: SearchArgs, query: Query, top_k: int) -> Response:
+    def search(self, search_params: SearchArgs, query: Query, top_k: int) -> SearchResponse:
         es_query = {
             "field": "text",
             "query_vector": query.embedding.tolist(),
@@ -114,7 +117,7 @@ class ElasticsearchEngine(EngineBase):
         start = time.time_ns()
         response = self.client.search(index="test", knn=es_query, source=["_id"], size=top_k)
         end = time.time_ns()
-        return Response(
+        return SearchResponse(
             results=[DocScore(doc=int(doc["_id"]), score=doc["_score"]) for doc in response["hits"]["hits"]],
             client_latency=(end - start) / 1000000000.0,
         )

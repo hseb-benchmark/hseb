@@ -7,7 +7,7 @@ from redis.commands.search.query import Query as RedisQuery
 
 from hseb.core.config import Config, IndexArgs, QuantDatatype, SearchArgs
 from hseb.core.dataset import Doc, Query
-from hseb.core.response import DocScore, Response
+from hseb.core.response import DocScore, IndexResponse, SearchResponse
 from hseb.engine.base import EngineBase
 
 logger = logging.getLogger()
@@ -98,7 +98,7 @@ class RedisEngine(EngineBase):
     def commit(self):
         pass
 
-    def index_batch(self, batch: list[Doc]):
+    def index_batch(self, batch: list[Doc]) -> IndexResponse:
         pipe = self.client.pipeline()
 
         for doc in batch:
@@ -119,10 +119,12 @@ class RedisEngine(EngineBase):
                 "tag": tag_str,  # Store tags as comma-separated string
             }
             pipe.hset(doc_key, mapping=doc_data)
-
+        start = time.perf_counter()
         pipe.execute()
+        end = time.perf_counter()
+        return IndexResponse(client_latency=end - start)
 
-    def search(self, search_params: SearchArgs, query: Query, top_k: int) -> Response:
+    def search(self, search_params: SearchArgs, query: Query, top_k: int) -> SearchResponse:
         # Build KNN query - use the same dtype as the index was created with
         if self.index_args.quant == QuantDatatype.FLOAT16:
             query_vector = query.embedding.astype("float16").tobytes()
@@ -164,7 +166,7 @@ class RedisEngine(EngineBase):
             score = float(result.vector_score)
             doc_scores.append(DocScore(doc=doc_id, score=score))
 
-        return Response(
+        return SearchResponse(
             results=doc_scores,
             client_latency=(end - start) / 1000000000.0,
         )

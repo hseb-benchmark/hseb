@@ -1,7 +1,7 @@
 import docker
 from hseb.core.config import Config, IndexArgs, QuantDatatype, SearchArgs
 from hseb.core.dataset import Doc, Query
-from hseb.core.response import DocScore, Response
+from hseb.core.response import DocScore, IndexResponse, SearchResponse
 from hseb.engine.base import EngineBase
 from qdrant_client import QdrantClient
 import time
@@ -33,9 +33,12 @@ class Qdrant(EngineBase):
     def __init__(self, config: Config):
         self.config = config
 
-    def index_batch(self, batch: list[Doc]):
+    def index_batch(self, batch: list[Doc]) -> IndexResponse:
         points = [PointStruct(id=doc.id, vector=doc.embedding.tolist(), payload={"tag": doc.tag}) for doc in batch]
+        start = time.perf_counter()
         self.client.upsert(collection_name="test", points=points)
+        end = time.perf_counter()
+        return IndexResponse(client_latency=end - start)
 
     def commit(self):
         is_green = False
@@ -50,7 +53,7 @@ class Qdrant(EngineBase):
         if not is_green:
             raise Exception("collection stuck at non-green status")
 
-    def search(self, search_params: SearchArgs, query: Query, top_k: int) -> Response:
+    def search(self, search_params: SearchArgs, query: Query, top_k: int) -> SearchResponse:
         def create_filter():
             if search_params.filter_selectivity == 100:
                 return None
@@ -70,7 +73,7 @@ class Qdrant(EngineBase):
             limit=top_k,
         )
         end = time.time_ns()
-        return Response(
+        return SearchResponse(
             results=[DocScore(point.id, point.score) for point in response.points],
             client_latency=(end - start) / 1000000000.0,
         )
