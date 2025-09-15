@@ -1,6 +1,6 @@
 import argparse
 import time
-from hseb.core.submission import Submission
+from hseb.core.submission import ExperimentMetrics, Submission
 from hseb.engine.base import EngineBase
 from hseb.core.config import Config
 from hseb.core.dataset import BenchmarkDataset
@@ -8,6 +8,7 @@ from hseb.core.measurement import ExperimentResult, QueryResult
 from tqdm import tqdm
 from structlog import get_logger
 import tempfile
+import random
 
 logger = get_logger()
 
@@ -32,6 +33,14 @@ if __name__ == "__main__":
         default=True,
         help="should we delete all stopped containers? this saves disk space, but you lose engine logs",
     )
+    parser.add_argument(
+        "--warmup",
+        type=int,
+        required=False,
+        default=1000,
+        help="number of random queries to warmup the engine",
+    )
+    parser.add_argument("--queries", type=int, required=False, help="number of queries to sample for benchmark")
 
     args = parser.parse_args()
 
@@ -72,7 +81,7 @@ if __name__ == "__main__":
                             f"Index built in {warmup_start - index_start} seconds (ingest={int(commit_start - index_start)} commit={int(warmup_start - commit_start)})"
                         )
                         warmup_latencies: list[float] = []
-                        for warmup_query in tqdm(list(data.queries()), desc="warmup"):
+                        for warmup_query in tqdm(random.choices(list(data.queries()), k=args.warmup), desc="warmup"):
                             response = engine.search(search_variations[0], warmup_query, exp.k)
                             warmup_latencies.append(response.client_latency)
 
@@ -105,7 +114,8 @@ if __name__ == "__main__":
                                 warmup_latencies=warmup_latencies,
                             )
                             result.to_json(workdir=workdir)
-
+                            metrics = ExperimentMetrics.from_experiment(result)
+                            logger.info(f"Run finished: {metrics.metrics.as_string()}")
                             run_index += 1
                     except Exception as error:
                         logger.exception(f"skipping search run {search_args}: {error}")

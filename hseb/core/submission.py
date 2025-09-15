@@ -8,6 +8,7 @@ from pathlib import Path
 from importlib.metadata import PackageNotFoundError, version
 from hseb.core.measurement import ExperimentResult
 from structlog import get_logger
+import numpy as np
 
 logger = get_logger()
 
@@ -16,7 +17,24 @@ class QueryMetrics(BaseModel):
     recall5: list[float] = Field(default_factory=list)
     recall10: list[float] = Field(default_factory=list)
     recall30: list[float] = Field(default_factory=list)
+    recall100: list[float] = Field(default_factory=list)
     latency: list[float] = Field(default_factory=list)
+
+    def as_dict(self) -> dict[str, float]:
+        return {
+            "recall@5": sum(self.recall5) / len(self.recall5),
+            "recall@10": sum(self.recall10) / len(self.recall10),
+            "recall@30": sum(self.recall30) / len(self.recall30),
+            "recall@100": sum(self.recall100) / len(self.recall100),
+            "latency_mean": sum(self.latency) / len(self.latency),
+            "latency_p90": np.percentile(self.latency, q=90).item(),
+            "latency_p95": np.percentile(self.latency, q=95).item(),
+            "latency_p99": np.percentile(self.latency, q=99).item(),
+        }
+
+    def as_string(self) -> str:
+        values = [f"{key}={round(value, 5)}" for key, value in self.as_dict().items()]
+        return " ".join(values)
 
 
 class ExperimentMetrics(BaseModel):
@@ -44,6 +62,7 @@ class ExperimentMetrics(BaseModel):
             metrics.recall5.append(ExperimentMetrics.recall_score(ground_truth, retrieved_docs, 5))
             metrics.recall10.append(ExperimentMetrics.recall_score(ground_truth, retrieved_docs, 10))
             metrics.recall30.append(ExperimentMetrics.recall_score(ground_truth, retrieved_docs, 30))
+            metrics.recall100.append(ExperimentMetrics.recall_score(ground_truth, retrieved_docs, 100))
             metrics.latency.append(query.client_latency)
         return ExperimentMetrics(
             tag=exp.tag,
