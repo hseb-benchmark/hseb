@@ -107,14 +107,14 @@ if __name__ == "__main__":
                             result.to_json(workdir=workdir)
 
                             run_index += 1
-                    except Exception:
-                        logger.error(f"skipping search run {search_args}")
+                    except Exception as error:
+                        logger.exception(f"skipping search run {search_args}: {error}")
                         search_fails += 1
                     logger.debug(
                         f"Indexing run {indexing_args_index + 1}/{len(index_variations)} done in {time.perf_counter() - index_start} seconds"
                     )
-                except Exception:
-                    logger.error(f"skipping index run {index_args}")
+                except Exception as error:
+                    logger.exception(f"skipping index run {index_args}: {error}")
                     index_fails += 1
                 finally:
                     engine.stop()
