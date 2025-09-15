@@ -69,10 +69,9 @@ if __name__ == "__main__":
                     index_start = time.perf_counter()
                     index_batch_times: list[float] = []
                     for batch in tqdm(batches, total=total, desc="indexing"):
-                        batch_start = time.perf_counter()
-                        engine.index_batch(batch=batch)
-                        batch_end = time.perf_counter()
-                        index_batch_times.append(batch_end - batch_start)
+                        index_response = engine.index_batch(batch=batch)
+                        index_batch_times.append(index_response.client_latency)
+
                     commit_start = time.perf_counter()
                     engine.commit()
                     try:

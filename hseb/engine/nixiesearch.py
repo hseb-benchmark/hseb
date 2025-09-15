@@ -2,7 +2,7 @@ from hseb.engine.base import EngineBase
 import requests
 import json
 import time
-from hseb.core.response import DocScore, Response
+from hseb.core.response import DocScore, IndexResponse, SearchResponse
 import tempfile
 import yaml
 from hseb.core.config import Config, SearchArgs, IndexArgs
@@ -17,7 +17,7 @@ class NixiesearchEngine(EngineBase):
     def __init__(self, config: Config):
         self.config = config
 
-    def index_batch(self, batch: list[Doc]):
+    def index_batch(self, batch: list[Doc]) -> IndexResponse:
         start = time.perf_counter()
         payload = []
         for doc in batch:
@@ -27,7 +27,9 @@ class NixiesearchEngine(EngineBase):
                 "tag": doc.tag,
             }
             payload.append(doc_json)
+        start = time.perf_counter()
         response = requests.post("http://localhost:8080/v1/index/test", json=payload)
+        end = time.perf_counter()
         logger.debug(f"Indexed batch of {len(batch)} docs in {time.perf_counter() - start} sec")
         if response.status_code != 200:
             raise Exception(response.text)
@@ -35,6 +37,7 @@ class NixiesearchEngine(EngineBase):
         if self.docs_in_segment >= self.index_args.kwargs.get("docs_per_segment", 1024):
             requests.post("http://localhost:8080/v1/index/test/flush")
             self.docs_in_segment = 0
+        return IndexResponse(client_latency=end - start)
 
     def commit(self):
         logger.debug(requests.post("http://localhost:8080/v1/index/test/flush"))
@@ -42,7 +45,7 @@ class NixiesearchEngine(EngineBase):
         # logger.debug(requests.post("http://localhost:8080/v1/index/test/merge"))
         # logger.info("indexing done")
 
-    def search(self, search_params: SearchArgs, query: Query, top_k: int) -> Response:
+    def search(self, search_params: SearchArgs, query: Query, top_k: int) -> SearchResponse:
         payload = {
             "query": {
                 "knn": {
@@ -61,7 +64,7 @@ class NixiesearchEngine(EngineBase):
         end = time.time_ns()
         decoded = json.loads(response.text)
         results = [DocScore(doc=int(hit["_id"]), score=float(hit["_score"])) for hit in decoded["hits"]]
-        return Response(results=results, client_latency=(end - start) / 1000000000.0)
+        return SearchResponse(results=results, client_latency=(end - start) / 1000000000.0)
 
     def start(self, index_args: IndexArgs):
         self.index_args = index_args

@@ -12,7 +12,7 @@ from weaviate.classes.data import DataObject
 
 from hseb.core.config import Config, IndexArgs, QuantDatatype, SearchArgs
 from hseb.core.dataset import Doc, Query
-from hseb.core.response import DocScore, Response
+from hseb.core.response import DocScore, IndexResponse, SearchResponse
 from hseb.engine.base import EngineBase
 
 logger = logging.getLogger()
@@ -84,7 +84,7 @@ class WeaviateEngine(EngineBase):
     def commit(self):
         pass
 
-    def index_batch(self, batch: list[Doc]):
+    def index_batch(self, batch: list[Doc]) -> IndexResponse:
         collection = self.client.collections.get(self.collection_name)
 
         # Prepare objects for batch insertion
@@ -103,9 +103,12 @@ class WeaviateEngine(EngineBase):
             objects.append(obj)
 
         # Batch insert
+        start = time.perf_counter()
         collection.data.insert_many(objects)
+        end = time.perf_counter()
+        return IndexResponse(client_latency=end - start)
 
-    def search(self, search_params: SearchArgs, query: Query, top_k: int) -> Response:
+    def search(self, search_params: SearchArgs, query: Query, top_k: int) -> SearchResponse:
         collection = self.client.collections.get(self.collection_name)
 
         # Create filter if needed
@@ -131,7 +134,7 @@ class WeaviateEngine(EngineBase):
             id = self.uuid_docid_cache[obj.uuid]
             doc_scores.append(DocScore(doc=id, score=-obj.metadata.distance))
 
-        return Response(
+        return SearchResponse(
             results=doc_scores,
             client_latency=(end - start) / 1000000000.0,
         )

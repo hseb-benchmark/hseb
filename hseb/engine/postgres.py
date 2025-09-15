@@ -7,7 +7,7 @@ from psycopg2.extras import execute_values
 
 from hseb.core.config import Config, IndexArgs, QuantDatatype, SearchArgs
 from hseb.core.dataset import Doc, Query
-from hseb.core.response import DocScore, Response
+from hseb.core.response import DocScore, IndexResponse, SearchResponse
 from hseb.engine.base import EngineBase
 
 logger = logging.getLogger()
@@ -122,11 +122,12 @@ class PostgresEngine(EngineBase):
         with self.connection.cursor() as cursor:
             cursor.execute("VACUUM ANALYZE documents;")
 
-    def index_batch(self, batch: list[Doc]):
+    def index_batch(self, batch: list[Doc]) -> IndexResponse:
         # Prepare data for batch insert
         data = [(doc.id, doc.text, doc.embedding.tolist(), doc.tag) for doc in batch]
 
         with self.connection.cursor() as cursor:
+            start = time.perf_counter()
             execute_values(
                 cursor,
                 "INSERT INTO documents (id, text, embedding, tag) VALUES %s ON CONFLICT (id) DO NOTHING",
@@ -134,8 +135,10 @@ class PostgresEngine(EngineBase):
                 template=None,
                 page_size=len(data),
             )
+            end = time.perf_counter()
+            return IndexResponse(client_latency=end - start)
 
-    def search(self, search_params: SearchArgs, query: Query, top_k: int) -> Response:
+    def search(self, search_params: SearchArgs, query: Query, top_k: int) -> SearchResponse:
         # Build the query - use appropriate distance function with proper type casting
         if self.index_args.quant == QuantDatatype.INT1:
             # For bit vectors, use Hamming distance
@@ -184,7 +187,7 @@ class PostgresEngine(EngineBase):
             # For inner product, convert negative inner product to positive score
             doc_scores = [DocScore(doc=row[0], score=-row[1]) for row in results]
 
-        return Response(
+        return SearchResponse(
             results=doc_scores,
             client_latency=(end - start) / 1000000000.0,
         )

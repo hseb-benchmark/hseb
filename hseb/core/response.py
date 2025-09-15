@@ -8,6 +8,11 @@ class DocScore:
 
 
 @dataclass
-class Response:
+class SearchResponse:
     results: list[DocScore]
+    client_latency: float
+
+
+@dataclass
+class IndexResponse:
     client_latency: float
