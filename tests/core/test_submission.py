@@ -40,7 +40,14 @@ def test_submission():
     m2 = QueryResult(query_id=1, exact=[DocScore(1, 1)], response=[DocScore(1, 1)], client_latency=1)
     result = ExperimentResult(
         tag="test",
-        index_args=IndexArgs(m=32, ef_construction=32, quant=QuantDatatype.FLOAT32, batch_size=32, kwargs={}),
+        index_args=IndexArgs(
+            m=32,
+            ef_construction=32,
+            quant=QuantDatatype.FLOAT32,
+            batch_size=32,
+            segments=None,
+            kwargs={},
+        ),
         search_args=SearchArgs(ef_search=32, filter_selectivity=100, kwargs={}),
         queries=[m1, m2],
         indexing_time=[1],

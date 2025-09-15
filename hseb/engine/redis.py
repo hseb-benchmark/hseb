@@ -32,6 +32,8 @@ class RedisEngine(EngineBase):
             raise ValueError(
                 f"Redis does not support {index_args.quant} quantization. Supported types: {list(REDIS_DATATYPES.keys())}"
             )
+        if index_args.segments is not None:
+            raise ValueError("Redis cannot set number of segments")
 
         docker_client = docker.from_env()
 

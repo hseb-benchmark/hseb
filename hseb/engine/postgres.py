@@ -34,7 +34,9 @@ class PostgresEngine(EngineBase):
     def start(self, index_args: IndexArgs):
         # Check for unsupported quantization types
         if index_args.quant == QuantDatatype.INT8:
-            raise ValueError("PostgreSQL with pgvector does not support INT8 quantization")
+            raise ValueError("Postgres with pgvector does not support INT8 quantization")
+        if index_args.segments is not None:
+            raise ValueError("Postgres with pgvector cannot set number of segments")
 
         docker_client = docker.from_env()
 
