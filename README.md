@@ -25,10 +25,10 @@ Instead of comparing raw recall-QPS curves, HSEB finds the Pareto front of optim
 
 | Engine | Version | Index Parameters | Search Parameters |
 |--------|---------|------------------|-------------------|
-| **Nixiesearch** | 0.6.x | `m`, `ef_construction`, `quant`, `docs_per_segment`, `heap_size`, `ram_buffer_size` | `ef_search`, `filter_selectivity` |
-| **Qdrant** | 1.x | `m`, `ef_construction`, `quant`, `max_segment_size_kb`, `original_vectors_on_disk`, `hnsw_on_disk` | `ef_search`, `filter_selectivity` |
-| **Elasticsearch** | 8.x, 9.x | `m`, `ef_construction`, `quant`, `docs_per_segment`, `max_merged_segment`, `heap_size` | `ef_search`, `filter_selectivity` |
-| **OpenSearch** | 2.x, 3.x | `m`, `ef_construction`, `quant`, `docs_per_segment`, `max_merged_segment`, `heap_size` | `ef_search`, `filter_selectivity` |
+| **Nixiesearch** | 0.7.x | `m`, `ef_construction`, `quant`, `segments`, `docs_per_segment`, `heap_size`, `ram_buffer_size` | `ef_search`, `filter_selectivity` |
+| **Qdrant** | 1.15.x | `m`, `ef_construction`, `quant`, `segments`, `max_segment_size_kb`, `original_vectors_on_disk`, `hnsw_on_disk` | `ef_search`, `filter_selectivity` |
+| **Elasticsearch** | 8.x, 9.x | `m`, `ef_construction`, `quant`, `segments`, `docs_per_segment`, `max_merged_segment`, `heap_size` | `ef_search`, `filter_selectivity` |
+| **OpenSearch** | 2.x, 3.x | `m`, `ef_construction`, `quant`, `segments`, `docs_per_segment`, `max_merged_segment`, `heap_size` | `ef_search`, `filter_selectivity` |
 | **PostgreSQL + pgvector** | 0.8.x | `m`, `ef_construction`, `quant`, `shared_buffers`, `work_mem`, `maintenance_work_mem` | `ef_search`, `filter_selectivity` |
 | **Redis** | 8.x | `m`, `ef_construction`, `quant`, `maxmemory`, `maxmemory_policy` | `ef_search`, `filter_selectivity` |
 | **Weaviate** | 1.x | `m`, `ef_construction`, `quant` | `ef_search`, `filter_selectivity` |
@@ -44,9 +44,20 @@ wget https://raw.githubusercontent.com/hseb-benchmark/hseb/main/configs/qdrant/d
 
 # Run a benchmark
 python -m hseb --config dev.yml --out results.json
+
+# Run with custom warmup and query sampling
+python -m hseb --config dev.yml --out results.json --warmup 500 --queries 1000
 ```
 
 You can choose from any of the [available configs](https://github.com/hseb-benchmark/hseb/tree/main/configs) for different engines (qdrant, elastic, nixiesearch, etc).
+
+### CLI Parameters
+
+- `--config`: Required path to YAML configuration file
+- `--out`: Required output filename for benchmark results (JSON format)  
+- `--cleanup`: Optional boolean to delete stopped containers (default: true, saves disk space but loses engine logs)
+- `--warmup`: Optional number of random queries for engine warmup (default: 1000)
+- `--queries`: Optional number of queries to sample from dataset for benchmarking (if not specified, uses all queries)
 
 ## Development Installation
 
@@ -59,18 +70,23 @@ pip install -e .[test]
 # Run a benchmark
 python -m hseb --config configs/qdrant/dev.yml --out results.json
 
+# Run with custom warmup and query sampling
+python -m hseb --config configs/qdrant/dev.yml --out results.json --warmup 500 --queries 1000
+
+# Disable container cleanup to preserve logs
+python -m hseb --config configs/qdrant/dev.yml --out results.json --cleanup false
 ```
 
 ### Example Configuration
 
 ```yaml
-engine: hseb.engine.qdrant.QdrantEngine
-image: qdrant/qdrant:v1.12.5
+engine: hseb.engine.qdrant.Qdrant
+image: qdrant/qdrant:v1.15.4
 dataset:
   dim: 384
   name: hseb-benchmark/msmarco
-  query: "query-all-MiniLM-L6-v2-100K"
-  corpus: "corpus-all-MiniLM-L6-v2-100K"
+  query: "query-all-MiniLM-L6-v2-1M"
+  corpus: "corpus-all-MiniLM-L6-v2-1M"
 
 experiments:
 - tag: hnsw-optimization
@@ -266,8 +282,8 @@ image: my-search-engine:latest
 dataset:
   dim: 384
   name: hseb-benchmark/msmarco
-  query: "query-all-MiniLM-L6-v2-100K"
-  corpus: "corpus-all-MiniLM-L6-v2-100K"
+  query: "query-all-MiniLM-L6-v2-1M"
+  corpus: "corpus-all-MiniLM-L6-v2-1M"
 
 experiments:
 - tag: test
@@ -276,6 +292,7 @@ experiments:
     m: [16, 32]
     ef_construction: [128, 256]
     quant: ["float32"]
+    segments: [4, 8]  # Optional: segments parameter for engines that support it
   search:
     ef_search: [128, 256]
     filter_selectivity: [10, 90, 100]
