@@ -81,7 +81,8 @@ if __name__ == "__main__":
                         )
                         warmup_latencies: list[float] = []
                         for warmup_query in tqdm(random.choices(list(data.queries()), k=args.warmup), desc="warmup"):
-                            response = engine.search(search_variations[0], warmup_query, exp.k)
+                            k_eff = min(exp.k, search_variations[0].ef_search)
+                            response = engine.search(search_variations[0], warmup_query, k_eff)
                             warmup_latencies.append(response.client_latency)
 
                         logger.info(f"Warmup done in {time.perf_counter() - warmup_start} seconds")
@@ -91,12 +92,12 @@ if __name__ == "__main__":
                             )
 
                             measurements: list[QueryResult] = []
-
+                            k_eff = min(exp.k, search_args.ef_search)
                             for query in tqdm(list(data.queries()), desc="search"):
-                                response = engine.search(search_args, query, exp.k)
-                                if len(response.results) != exp.k:
+                                response = engine.search(search_args, query, k_eff)
+                                if len(response.results) != k_eff:
                                     logger.warn(
-                                        f"Engine returned {len(response.results)} docs, which less than {exp.k} docs expected"
+                                        f"Engine returned {len(response.results)} docs, which less than {k_eff} docs expected"
                                     )
                                 measurements.append(
                                     QueryResult.from_response(
