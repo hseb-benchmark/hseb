@@ -18,7 +18,7 @@ class EngineSuite(ABC):
                 try:
                     engine.start(index_args)
                 finally:
-                    engine.stop()
+                    engine.stop(cleanup=True)
 
     def test_index_search(self):
         conf: Config = self.config()
@@ -44,4 +44,4 @@ class EngineSuite(ABC):
                                 assert isinstance(doc.doc, int)
                                 prev_score = doc.score
                 finally:
-                    engine.stop()
+                    engine.stop(cleanup=True)
