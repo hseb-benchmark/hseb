@@ -109,11 +109,13 @@ class PostgresEngine(EngineBase):
         self.ef_search_set = False
         return self
 
-    def stop(self):
+    def stop(self, cleanup: bool):
         if self.connection:
             self.connection.close()
         if self.container:
             self.container.stop()
+        if cleanup:
+            self.container.remove()
 
     def commit(self):
         # Just optimize table

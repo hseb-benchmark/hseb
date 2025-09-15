@@ -82,8 +82,10 @@ class OpenSearchEngine(EngineBase):
         )
         self.docs_in_segment = 0
 
-    def stop(self):
+    def stop(self, cleanup: bool):
         self.container.stop()
+        if cleanup:
+            self.container.remove()
 
     def commit(self):
         self.client.indices.refresh(index="test")

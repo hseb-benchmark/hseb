@@ -26,10 +26,10 @@ if __name__ == "__main__":
         help="output file name",
     )
     parser.add_argument(
-        "--delete-container",
+        "--cleanup",
         type=bool,
         required=False,
-        default=False,
+        default=True,
         help="should we delete all stopped containers? this saves disk space, but you lose engine logs",
     )
 
@@ -117,7 +117,7 @@ if __name__ == "__main__":
                     logger.exception(f"skipping index run {index_args}: {error}")
                     index_fails += 1
                 finally:
-                    engine.stop()
+                    engine.stop(args.cleanup)
         submission = Submission.from_dir(config=config, path=workdir)
         logger.info(f"Writing submission file to {args.out}")
         submission.to_json(args.out)

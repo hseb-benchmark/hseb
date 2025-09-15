@@ -43,7 +43,7 @@ pip install hseb
 wget https://raw.githubusercontent.com/hseb-benchmark/hseb/main/configs/qdrant/dev.yml
 
 # Run a benchmark
-python -m hseb --config dev.yml --out results.json --delete-container true
+python -m hseb --config dev.yml --out results.json
 ```
 
 You can choose from any of the [available configs](https://github.com/hseb-benchmark/hseb/tree/main/configs) for different engines (qdrant, elastic, nixiesearch, etc).
@@ -59,8 +59,6 @@ pip install -e .[test]
 # Run a benchmark
 python -m hseb --config configs/qdrant/dev.yml --out results.json
 
-# Clean up containers afterward
-python -m hseb --config configs/opensearch/dev.yml --out results.json --delete-container true
 ```
 
 ### Example Configuration
@@ -252,10 +250,11 @@ class MyCustomEngine(EngineBase):
             client_latency=(end_time - start_time) / 1000000000.0
         )
 
-    def stop(self):
+    def stop(self, cleanup: bool):
         # Clean up container
         if self.container:
             self.container.stop()
+        if cleanup:
             self.container.remove()
 ```
 
