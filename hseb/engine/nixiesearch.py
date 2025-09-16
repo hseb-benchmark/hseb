@@ -58,9 +58,13 @@ class NixiesearchEngine(EngineBase):
             "size": top_k,
         }
         if search_params.filter_selectivity != 100:
-            payload["filter"] = {"include": {"term": {"tags": search_params.filter_selectivity}}}
+            payload["filters"] = {"include": {"term": {"tag": search_params.filter_selectivity}}}
         start = time.time_ns()
+
         response = requests.post("http://localhost:8080/v1/index/test/search", json=payload)
+        if response.status_code != 200:
+            logger.error(payload)
+            raise Exception(f"got non-200 response: {response.text}")
         end = time.time_ns()
         decoded = json.loads(response.text)
         results = [DocScore(doc=int(hit["_id"]), score=float(hit["_score"])) for hit in decoded["hits"]]

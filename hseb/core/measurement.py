@@ -1,5 +1,6 @@
 from __future__ import annotations
 from pydantic import BaseModel
+from hseb.core.dataset import Query
 from hseb.core.response import DocScore, SearchResponse
 from hseb.core.config import IndexArgs, SearchArgs
 
@@ -38,12 +39,19 @@ class QueryResult(BaseModel):
 
     @staticmethod
     def from_response(
-        query_id: int,
-        exact: list[DocScore],
+        query: Query,
+        search_args: SearchArgs,
         response: SearchResponse,
     ) -> QueryResult:
+        match search_args.filter_selectivity:
+            case 10:
+                exact = query.exact10
+            case 90:
+                exact = query.exact90
+            case 100:
+                exact = query.exact100
         return QueryResult(
-            query_id=query_id,
+            query_id=query.id,
             exact=exact,
             response=response.results,
             client_latency=response.client_latency,

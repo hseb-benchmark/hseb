@@ -100,9 +100,7 @@ if __name__ == "__main__":
                                         f"Engine returned {len(response.results)} docs, which less than {k_eff} docs expected"
                                     )
                                 measurements.append(
-                                    QueryResult.from_response(
-                                        query_id=query.id, exact=query.exact100, response=response
-                                    )
+                                    QueryResult.from_response(query=query, search_args=search_args, response=response)
                                 )
 
                             result = ExperimentResult(

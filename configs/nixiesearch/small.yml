@@ -1,5 +1,5 @@
 engine: hseb.engine.nixiesearch.NixiesearchEngine
-image: nixiesearch/nixiesearch:0.7.0
+image: nixiesearch/nixiesearch:0.7.1
 dataset: 
   dim: 384
   name: hseb-benchmark/msmarco
@@ -14,7 +14,7 @@ experiments:
     ef_construction: [32, 64, 128, 256, 512]
     quant: ["float32"]
     kwargs:
-      refresh_every: [125000]
+      refresh_every: [10000]
       heap_size: ["8g"]
   search:
     ef_search: [32, 64, 96, 128, 192, 256]
