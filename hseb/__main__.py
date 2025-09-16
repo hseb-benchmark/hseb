@@ -98,12 +98,11 @@ if __name__ == "__main__":
 
                             measurements: list[QueryResult] = []
                             k_eff = min(exp.k, search_args.ef_search)
+                            incomplete_results: list[int] = []
                             for query in tqdm(list(data.queries()), desc="search"):
                                 response = engine.search(search_args, query, k_eff)
                                 if len(response.results) != k_eff:
-                                    logger.warn(
-                                        f"Engine returned {len(response.results)} docs, which less than {k_eff} docs expected"
-                                    )
+                                    incomplete_results.append(len(response.results))
                                 measurements.append(
                                     QueryResult.from_response(query=query, search_args=search_args, response=response)
                                 )
@@ -118,6 +117,10 @@ if __name__ == "__main__":
                             )
                             result.to_json(workdir=workdir)
                             metrics = ExperimentMetrics.from_experiment(result)
+                            if len(incomplete_results) > 0:
+                                logger.warning(
+                                    f"Engine returned {len(incomplete_results)}/{len(measurements)} incomplete results (expected {k_eff}): {incomplete_results}"
+                                )
                             logger.info(f"Run finished: {metrics.metrics.as_string()}")
                             run_index += 1
                     except Exception as error:
