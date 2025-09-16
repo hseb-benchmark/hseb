@@ -131,9 +131,7 @@ class RedisEngine(EngineBase):
         # Add filter if needed
         if search_params.filter_selectivity != 100:
             # Filter by tag using TagField exact match syntax with curly brackets
-            base_query = (
-                f"(@tag:{search_params.filter_selectivity})=>[KNN {top_k} @embedding $query_vector AS vector_score]"
-            )
+            base_query = f"(@tag:{{{search_params.filter_selectivity}}})=>[KNN {top_k} @embedding $query_vector AS vector_score]"
 
         # Use ef_search parameter for HNSW search
 
@@ -142,7 +140,7 @@ class RedisEngine(EngineBase):
         results = self.client.ft("documents").search(
             RedisQuery(base_query)
             .sort_by("vector_score", asc=False)  # Sort by score descending (best matches first)
-            .return_fields("vector_score", "tag")
+            .return_fields("vector_score")
             .dialect(2)
             .paging(0, top_k),
             query_params={"query_vector": embedding_bytes},

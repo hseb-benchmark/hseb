@@ -4,8 +4,8 @@ image: redis:8.2.1
 dataset: 
   dim: 384
   name: hseb-benchmark/msmarco
-  query: "query-all-MiniLM-L6-v2-1M"
-  corpus: "corpus-all-MiniLM-L6-v2-1M"
+  query: "query-all-MiniLM-L6-v2-100K"
+  corpus: "corpus-all-MiniLM-L6-v2-100K"
 batch_size: 1024
 experiments:
 - tag: test
