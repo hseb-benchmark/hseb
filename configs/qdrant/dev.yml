@@ -16,4 +16,4 @@ experiments:
     segments: [8]
   search:
     ef_search: [256]
-    filter_selectivity: [100]
+    filter_selectivity: [10,100]

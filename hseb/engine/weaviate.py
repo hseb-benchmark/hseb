@@ -68,7 +68,7 @@ class WeaviateEngine(EngineBase):
             ),
             properties=[
                 Property(name="text", data_type=DataType.TEXT),
-                Property(name="tag", data_type=DataType.INT_ARRAY),
+                Property(name="tag", data_type=DataType.INT_ARRAY, index_filterable=True),
             ],
         )
 

@@ -107,6 +107,7 @@ class Qdrant(EngineBase):
                 default_segment_number=index_args.kwargs.get("default_segment_number", index_args.segments),
             ),
         )
+        self.client.create_payload_index(collection_name="test", field_name="tag", field_schema="integer")
         return self
 
     def stop(self, cleanup: bool):
