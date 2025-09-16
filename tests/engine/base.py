@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from hseb.core.config import Config
-from hseb.core.dataset import BenchmarkDataset
+from hseb.core.dataset import BenchmarkDataset, Doc
 from hseb.engine.base import EngineBase
 from tqdm import tqdm
 
@@ -25,6 +25,8 @@ class EngineSuite(ABC):
         data = BenchmarkDataset(conf.dataset)
         engine = EngineBase.load_class(conf.engine, config=conf)
 
+        docs: dict[int, Doc] = {doc.id: doc for doc in data.corpus()}
+
         for exp in conf.experiments:
             for index_args in exp.index.expand():
                 try:
@@ -42,6 +44,9 @@ class EngineSuite(ABC):
                                 assert doc.score > 0.0
                                 assert doc.score <= prev_score
                                 assert isinstance(doc.doc, int)
+                                real_doc = docs[doc.doc]
+                                # print(f"sel={search_args.filter_selectivity} doc={real_doc.id} tag={real_doc.tag}")
+                                assert search_args.filter_selectivity in real_doc.tag
                                 prev_score = doc.score
                 finally:
                     engine.stop(cleanup=True)

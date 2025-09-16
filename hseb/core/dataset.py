@@ -56,6 +56,20 @@ class BenchmarkDataset:
                 )
             yield result
 
+    def corpus(self) -> Generator[Doc, Any, None]:
+        for id, text, embedding, tag in zip(
+            self.corpus_dataset["id"],
+            self.corpus_dataset["text"],
+            self.corpus_dataset["embedding"],
+            self.corpus_dataset["tag"],
+        ):
+            yield Doc(
+                id=id,
+                text=text,
+                embedding=np.array(embedding),
+                tag=tag,
+            )
+
     def queries(self) -> Generator[Query, Any, None]:
         for row in self.query_dataset:
             yield Query.from_dict(row)

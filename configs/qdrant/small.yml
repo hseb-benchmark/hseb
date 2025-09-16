@@ -13,7 +13,7 @@ experiments:
     m: [8, 16, 32, 64, 128]
     ef_construction: [32, 64, 128, 256, 512]
     quant: ["float32"]
-    segments: [1,2,4,8]
+    segments: [2,4,8]
   search:
     ef_search: [32, 64, 96, 128, 192, 256]
     filter_selectivity: [10, 90, 100]
