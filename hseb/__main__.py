@@ -40,7 +40,12 @@ if __name__ == "__main__":
         default=1000,
         help="number of random queries to warmup the engine",
     )
-    parser.add_argument("--queries", type=int, required=False, help="number of queries to sample for benchmark")
+    parser.add_argument(
+        "--queries",
+        type=int,
+        required=False,
+        help="number of queries to sample for benchmark",
+    )
 
     args = parser.parse_args()
 
