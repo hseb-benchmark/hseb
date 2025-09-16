@@ -1,5 +1,5 @@
 engine: hseb.engine.opensearch.OpenSearchEngine
-image: opensearchproject/opensearch:2.19.3
+image: opensearchproject/opensearch:3.2.0
 dataset: 
   dim: 384
   name: hseb-benchmark/msmarco
