@@ -4,8 +4,8 @@ image: pgvector/pgvector:0.8.1-pg17-trixie
 dataset: 
   dim: 384
   name: hseb-benchmark/msmarco
-  query: "query-all-MiniLM-L6-v2-1K"
-  corpus: "corpus-all-MiniLM-L6-v2-1K"
+  query: "query-all-MiniLM-L6-v2-100K"
+  corpus: "corpus-all-MiniLM-L6-v2-100K"
 batch_size: 1024
 experiments:
 - tag: test
@@ -15,9 +15,9 @@ experiments:
     ef_construction: [32]
     quant: ["float32", "float16"]
     kwargs:
-      shared_buffers: ["2GB"]
-      work_mem: ["16MB"]
-      maintenance_work_mem: ["512MB"]
+      shared_buffers: ["8GB"]
+      work_mem: ["8GB"]
+      maintenance_work_mem: ["8GB"]
   search:
     ef_search: [128, 256]
     filter_selectivity: [10, 90, 100]

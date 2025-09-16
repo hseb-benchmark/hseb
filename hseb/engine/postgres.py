@@ -49,6 +49,7 @@ class PostgresEngine(EngineBase):
             image=self.config.image,
             ports={"5432/tcp": 5432},
             detach=True,
+            shm_size="4g",  # needed for buffers
             environment={
                 "POSTGRES_DB": "benchmark",
                 "POSTGRES_USER": "postgres",
@@ -90,13 +91,15 @@ class PostgresEngine(EngineBase):
 
             datatype = POSTGRES_DATATYPES[index_args.quant]
             cursor.execute(f"""
-                CREATE TABLE IF NOT EXISTS documents (
+                CREATE UNLOGGED TABLE IF NOT EXISTS documents (
                     id INTEGER PRIMARY KEY,
                     text TEXT,
                     embedding {datatype}({self.config.dataset.dim}),
                     tag INTEGER[]
                 );
             """)
+            cursor.execute("SET max_parallel_maintenance_workers = 7;")
+            cursor.execute("SET client_min_messages = DEBUG;")
 
             # Create HNSW index with appropriate operator class
             ops_class = POSTGRES_INDEX_OPS[index_args.quant]
