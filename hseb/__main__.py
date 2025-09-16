@@ -115,7 +115,7 @@ if __name__ == "__main__":
                             result.to_json(workdir=workdir)
                             metrics = ExperimentMetrics.from_experiment(result)
                             if len(incomplete_results) > 0:
-                                logger.warn(
+                                logger.warning(
                                     f"Engine returned {len(incomplete_results)}/{len(measurements)} incomplete results (expected {k_eff}): {incomplete_results}"
                                 )
                             logger.info(f"Run finished: {metrics.metrics.as_string()}")
