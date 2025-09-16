@@ -4,7 +4,7 @@ import time
 import docker
 import redis
 from redis.commands.search.query import Query as RedisQuery
-from redis.commands.search.field import VectorField, TextField, TagField
+from redis.commands.search.field import VectorField, TagField
 from redis.commands.search.index_definition import IndexDefinition, IndexType
 
 from hseb.core.config import Config, IndexArgs, QuantDatatype, SearchArgs
