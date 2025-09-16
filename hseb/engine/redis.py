@@ -4,6 +4,8 @@ import time
 import docker
 import redis
 from redis.commands.search.query import Query as RedisQuery
+from redis.commands.search.field import VectorField, TextField, TagField
+from redis.commands.search.index_definition import IndexDefinition, IndexType
 
 from hseb.core.config import Config, IndexArgs, QuantDatatype, SearchArgs
 from hseb.core.dataset import Doc, Query
@@ -15,9 +17,8 @@ logger = logging.getLogger()
 REDIS_DATATYPES = {
     QuantDatatype.FLOAT32: "FLOAT32",
     QuantDatatype.FLOAT16: "FLOAT16",
+    QuantDatatype.INT8: "INT8",
 }
-
-REDIS_DISTANCE_METRIC = "COSINE"  # Cosine similarity
 
 
 class RedisEngine(EngineBase):
@@ -55,36 +56,25 @@ class RedisEngine(EngineBase):
         # Connect to Redis
         self.client = redis.Redis(host="localhost", port=6379, decode_responses=False)
 
-        # Create vector index
-        datatype = REDIS_DATATYPES[index_args.quant]
+        # Create index with vector field using direct FT.CREATE command
 
-        # Use HNSW algorithm for large datasets
-        algorithm = "HNSW"
-        algorithm_params = ["M", str(index_args.m), "EF_CONSTRUCTION", str(index_args.ef_construction)]
-
-        try:
-            # Create index with vector field using direct FT.CREATE command
-            from redis.commands.search.field import VectorField, TextField, TagField
-
-            self.client.ft("documents").create_index(
-                [
-                    VectorField(
-                        "embedding",
-                        algorithm,
-                        {
-                            "TYPE": datatype,
-                            "DIM": self.config.dataset.dim,
-                            "DISTANCE_METRIC": REDIS_DISTANCE_METRIC,
-                            **dict(zip(algorithm_params[::2], algorithm_params[1::2])),
-                        },
-                    ),
-                    TextField("text"),
-                    TagField("tag", separator=","),  # Use comma separator for tags
-                ]
-            )
-        except redis.ResponseError as e:
-            if "Index already exists" not in str(e):
-                raise e
+        self.client.ft("documents").create_index(
+            fields=[
+                VectorField(
+                    name="embedding",
+                    algorithm="HNSW",
+                    attributes={
+                        "TYPE": REDIS_DATATYPES[index_args.quant],
+                        "DIM": self.config.dataset.dim,
+                        "DISTANCE_METRIC": "IP",
+                        "M": index_args.m,
+                        "EF_CONSTRUCTION": index_args.ef_construction,
+                    },
+                ),
+                TagField("tag", separator=","),  # Use comma separator for tags
+            ],
+            definition=IndexDefinition(prefix=["doc:"], index_type=IndexType.HASH),
+        )
 
         self.index_args = index_args
         return self
@@ -104,23 +94,22 @@ class RedisEngine(EngineBase):
         pipe = self.client.pipeline()
 
         for doc in batch:
-            # Store document as hash with vector embedding
-            doc_key = f"doc:{doc.id}"
-            # Convert tag array to comma-separated string for Redis TagField
-            tag_str = ",".join(map(str, doc.tag))
-
             # Use the same dtype as the index was created with
-            if self.index_args.quant == QuantDatatype.FLOAT16:
-                embedding_bytes = doc.embedding.astype("float16").tobytes()
-            else:
-                embedding_bytes = doc.embedding.astype("float32").tobytes()
+            match self.index_args.quant:
+                case QuantDatatype.FLOAT16:
+                    embedding_bytes = doc.embedding.astype("float16").tobytes()
+                case QuantDatatype.FLOAT32:
+                    embedding_bytes = doc.embedding.astype("float32").tobytes()
+                case QuantDatatype.INT8:
+                    embedding_bytes = doc.embedding.astype("int8").tobytes()
 
-            doc_data = {
-                "text": doc.text,
-                "embedding": embedding_bytes,
-                "tag": tag_str,  # Store tags as comma-separated string
-            }
-            pipe.hset(doc_key, mapping=doc_data)
+            pipe.hset(
+                f"doc:{doc.id}",
+                mapping={
+                    "embedding": embedding_bytes,
+                    "tag": ",".join(map(str, doc.tag)),  # Store tags as comma-separated string
+                },
+            )
         start = time.perf_counter()
         pipe.execute()
         end = time.perf_counter()
@@ -128,10 +117,13 @@ class RedisEngine(EngineBase):
 
     def search(self, search_params: SearchArgs, query: Query, top_k: int) -> SearchResponse:
         # Build KNN query - use the same dtype as the index was created with
-        if self.index_args.quant == QuantDatatype.FLOAT16:
-            query_vector = query.embedding.astype("float16").tobytes()
-        else:
-            query_vector = query.embedding.astype("float32").tobytes()
+        match self.index_args.quant:
+            case QuantDatatype.FLOAT16:
+                embedding_bytes = query.embedding.astype("float16").tobytes()
+            case QuantDatatype.FLOAT32:
+                embedding_bytes = query.embedding.astype("float32").tobytes()
+            case QuantDatatype.INT8:
+                embedding_bytes = query.embedding.astype("int8").tobytes()
 
         # Create base query with AS clause for scoring
         base_query = f"(*)=>[KNN {top_k} @embedding $query_vector AS vector_score]"
@@ -139,31 +131,29 @@ class RedisEngine(EngineBase):
         # Add filter if needed
         if search_params.filter_selectivity != 100:
             # Filter by tag using TagField exact match syntax with curly brackets
-            filter_query = f"(@tag:{{{search_params.filter_selectivity}}})"
-            base_query = f"({filter_query})=>[KNN {top_k} @embedding $query_vector AS vector_score]"
+            base_query = (
+                f"(@tag:{search_params.filter_selectivity})=>[KNN {top_k} @embedding $query_vector AS vector_score]"
+            )
 
         # Use ef_search parameter for HNSW search
-        search_params_dict = {"query_vector": query_vector}
 
         start = time.time_ns()
 
         results = self.client.ft("documents").search(
             RedisQuery(base_query)
             .sort_by("vector_score", asc=False)  # Sort by score descending (best matches first)
-            .return_fields("vector_score", "text", "tag")
+            .return_fields("vector_score", "tag")
             .dialect(2)
             .paging(0, top_k),
-            query_params=search_params_dict,
+            query_params={"query_vector": embedding_bytes},
         )
         end = time.time_ns()
 
         # Convert results to DocScore objects
         doc_scores = []
-        for i, result in enumerate(results.docs):
+        for result in results.docs:
             # Extract document ID from key (doc:123 -> 123)
-            # Handle both string and bytes for document ID
-            doc_key = result.id
-            doc_id = int(doc_key.split(":")[1])
+            doc_id = int(result.id.split(":")[1])
             # Redis returns similarity score in vector_score field
             score = float(result.vector_score)
             doc_scores.append(DocScore(doc=doc_id, score=score))
