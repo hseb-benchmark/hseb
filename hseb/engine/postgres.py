@@ -49,6 +49,7 @@ class PostgresEngine(EngineBase):
             image=self.config.image,
             ports={"5432/tcp": 5432},
             detach=True,
+            shm_size="4g",  # needed for buffers
             environment={
                 "POSTGRES_DB": "benchmark",
                 "POSTGRES_USER": "postgres",
@@ -69,6 +70,8 @@ class PostgresEngine(EngineBase):
                 "random_page_cost=1.1",
                 "-c",
                 "effective_cache_size=1GB",
+                "-c",
+                "max_parallel_maintenance_workers=7",
             ],
         )
         self._wait_for_logs(self.container, "database system is ready to accept connections")
@@ -88,13 +91,15 @@ class PostgresEngine(EngineBase):
 
             datatype = POSTGRES_DATATYPES[index_args.quant]
             cursor.execute(f"""
-                CREATE TABLE IF NOT EXISTS documents (
+                CREATE UNLOGGED TABLE IF NOT EXISTS documents (
                     id INTEGER PRIMARY KEY,
                     text TEXT,
                     embedding {datatype}({self.config.dataset.dim}),
                     tag INTEGER[]
                 );
             """)
+            cursor.execute("SET max_parallel_maintenance_workers = 7;")
+            cursor.execute("SET client_min_messages = DEBUG;")
 
             # Create HNSW index with appropriate operator class
             ops_class = POSTGRES_INDEX_OPS[index_args.quant]
@@ -108,7 +113,6 @@ class PostgresEngine(EngineBase):
             )
 
         self.index_args = index_args  # Store for later use
-        self.ef_search_set = False
         return self
 
     def stop(self, cleanup: bool):
@@ -172,11 +176,8 @@ class PostgresEngine(EngineBase):
         params.append(top_k)
 
         with self.connection.cursor() as cursor:
-            if not self.ef_search_set:
-                cursor.execute("SET hnsw.ef_search = %s", (search_params.ef_search,))
-
-        start = time.time_ns()
-        with self.connection.cursor() as cursor:
+            cursor.execute("SET hnsw.ef_search = %s", (search_params.ef_search,))
+            start = time.time_ns()
             cursor.execute(sql, params)
             results = cursor.fetchall()
         end = time.time_ns()
