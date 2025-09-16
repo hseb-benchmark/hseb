@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hseb"
-version = "0.0.7"
+version = "0.0.8"
 requires-python = ">=3.12"
 classifiers = [
     "Programming Language :: Python :: 3",
