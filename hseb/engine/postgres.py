@@ -69,6 +69,8 @@ class PostgresEngine(EngineBase):
                 "random_page_cost=1.1",
                 "-c",
                 "effective_cache_size=1GB",
+                "-c",
+                "max_parallel_maintenance_workers=7",
             ],
         )
         self._wait_for_logs(self.container, "database system is ready to accept connections")
@@ -108,7 +110,6 @@ class PostgresEngine(EngineBase):
             )
 
         self.index_args = index_args  # Store for later use
-        self.ef_search_set = False
         return self
 
     def stop(self, cleanup: bool):
@@ -172,11 +173,8 @@ class PostgresEngine(EngineBase):
         params.append(top_k)
 
         with self.connection.cursor() as cursor:
-            if not self.ef_search_set:
-                cursor.execute("SET hnsw.ef_search = %s", (search_params.ef_search,))
-
-        start = time.time_ns()
-        with self.connection.cursor() as cursor:
+            cursor.execute("SET hnsw.ef_search = %s", (search_params.ef_search,))
+            start = time.time_ns()
             cursor.execute(sql, params)
             results = cursor.fetchall()
         end = time.time_ns()
