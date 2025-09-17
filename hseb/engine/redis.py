@@ -139,7 +139,7 @@ class RedisEngine(EngineBase):
 
         results = self.client.ft("documents").search(
             RedisQuery(base_query)
-            .sort_by("vector_score", asc=False)  # Sort by score descending (best matches first)
+            .sort_by("vector_score", asc=True)
             .return_fields("vector_score")
             .dialect(2)
             .paging(0, top_k),

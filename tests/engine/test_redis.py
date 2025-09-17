@@ -27,11 +27,11 @@ class TestRedisEngine(EngineSuite):
                     k=10,
                     index=IndexArgsMatrix(
                         m=[16],
-                        ef_construction=[64],
+                        ef_construction=[32],
                         quant=[QuantDatatype.FLOAT32],
                         kwargs={"maxmemory": ["2gb"], "maxmemory_policy": ["allkeys-lru"]},
                     ),
-                    search=SearchArgsMatrix(ef_search=[16], filter_selectivity=[100]),
+                    search=SearchArgsMatrix(ef_search=[128], filter_selectivity=[10, 100]),
                 )
             ],
         )

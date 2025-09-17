@@ -2,8 +2,13 @@ from abc import ABC, abstractmethod
 
 from hseb.core.config import Config
 from hseb.core.dataset import BenchmarkDataset, Doc
+from hseb.core.measurement import ExperimentResult, QueryResult
+from hseb.core.submission import ExperimentMetrics
 from hseb.engine.base import EngineBase
 from tqdm import tqdm
+from structlog import get_logger
+
+logger = get_logger()
 
 
 class EngineSuite(ABC):
@@ -31,22 +36,36 @@ class EngineSuite(ABC):
             for index_args in exp.index.expand():
                 try:
                     engine.start(index_args)
+                    logger.info(f"indexing: {index_args}")
                     for batch in data.corpus_batched(index_args.batch_size):
                         engine.index_batch(batch)
 
                     engine.commit()
                     for search_args in exp.search.expand():
+                        measurements = []
+                        logger.info(f"searching: {search_args}")
                         for query in tqdm(list(data.queries())[:10], desc="searching"):
                             results = engine.search(search_args, query, 16)
                             assert len(results.results) == 16
+                            measurements.append(QueryResult.from_response(query, search_args, results))
                             prev_score = 10000.0
                             for doc in results.results:
                                 assert doc.score > 0.0
                                 assert doc.score <= prev_score
                                 assert isinstance(doc.doc, int)
                                 real_doc = docs[doc.doc]
-                                # print(f"sel={search_args.filter_selectivity} doc={real_doc.id} tag={real_doc.tag}")
                                 assert search_args.filter_selectivity in real_doc.tag
                                 prev_score = doc.score
+                        result = ExperimentResult(
+                            tag="test",
+                            indexing_time=[1],
+                            index_args=index_args,
+                            search_args=search_args,
+                            queries=measurements,
+                            warmup_latencies=[1],
+                        )
+                        metrics = ExperimentMetrics.from_experiment(result)
+                        recall10 = sum(metrics.metrics.recall10) / len(metrics.metrics.recall10)
+                        assert recall10 > 0.01
                 finally:
                     engine.stop(cleanup=True)
