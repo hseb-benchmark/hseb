@@ -154,7 +154,7 @@ class RedisEngine(EngineBase):
             doc_id = int(result.id.split(":")[1])
             # Redis returns similarity score in vector_score field
             score = float(result.vector_score)
-            doc_scores.append(DocScore(doc=doc_id, score=score))
+            doc_scores.append(DocScore(doc=doc_id, score=-score))
 
         return SearchResponse(
             results=doc_scores,

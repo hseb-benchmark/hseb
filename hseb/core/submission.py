@@ -59,8 +59,6 @@ class ExperimentMetrics(BaseModel):
         for query in exp.queries:
             ground_truth = [doc.doc for doc in query.exact]
             retrieved_docs = [doc.doc for doc in query.response]
-            # print(f"gt: {ground_truth}")
-            # print(f"retrieved: {retrieved_docs}")
             metrics.recall5.append(ExperimentMetrics.recall_score(ground_truth, retrieved_docs, 5))
             metrics.recall10.append(ExperimentMetrics.recall_score(ground_truth, retrieved_docs, 10))
             metrics.recall30.append(ExperimentMetrics.recall_score(ground_truth, retrieved_docs, 30))

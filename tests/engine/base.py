@@ -44,13 +44,12 @@ class EngineSuite(ABC):
                     for search_args in exp.search.expand():
                         measurements = []
                         logger.info(f"searching: {search_args}")
-                        for query in tqdm(list(data.queries())[:10], desc="searching"):
+                        for query in tqdm(list(data.queries(limit=10)), desc="searching"):
                             results = engine.search(search_args, query, 16)
                             assert len(results.results) == 16
                             measurements.append(QueryResult.from_response(query, search_args, results))
                             prev_score = 10000.0
                             for doc in results.results:
-                                assert doc.score > 0.0
                                 assert doc.score <= prev_score
                                 assert isinstance(doc.doc, int)
                                 real_doc = docs[doc.doc]
