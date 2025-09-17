@@ -85,7 +85,9 @@ if __name__ == "__main__":
                             f"Index built in {warmup_start - index_start} seconds (ingest={int(commit_start - index_start)} commit={int(warmup_start - commit_start)})"
                         )
                         warmup_latencies: list[float] = []
-                        for warmup_query in tqdm(random.choices(list(data.queries()), k=args.warmup), desc="warmup"):
+                        for warmup_query in tqdm(
+                            random.choices(list(data.queries(limit=1000)), k=args.warmup), desc="warmup"
+                        ):
                             k_eff = min(exp.k, search_variations[0].ef_search)
                             response = engine.search(search_variations[0], warmup_query, k_eff)
                             warmup_latencies.append(response.client_latency)
@@ -99,7 +101,7 @@ if __name__ == "__main__":
                             measurements: list[QueryResult] = []
                             k_eff = min(exp.k, search_args.ef_search)
                             incomplete_results: list[int] = []
-                            for query in tqdm(list(data.queries()), desc="search"):
+                            for query in tqdm(list(data.queries(limit=args.queries)), desc="search"):
                                 response = engine.search(search_args, query, k_eff)
                                 if len(response.results) != k_eff:
                                     incomplete_results.append(len(response.results))

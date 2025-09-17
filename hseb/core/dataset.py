@@ -70,9 +70,13 @@ class BenchmarkDataset:
                 tag=tag,
             )
 
-    def queries(self) -> Generator[Query, Any, None]:
-        for row in self.query_dataset:
-            yield Query.from_dict(row)
+    def queries(self, limit: int | None = None) -> Generator[Query, Any, None]:
+        if limit is None:
+            for row in self.query_dataset:
+                yield Query.from_dict(row)
+        else:
+            for row in self.query_dataset.take(limit):
+                yield Query.from_dict(row)
 
 
 @dataclass

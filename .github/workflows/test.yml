@@ -38,7 +38,7 @@ jobs:
       run: PATH=".venv/bin:$PATH" uv sync --extra test
     
     - name: Run tests
-      run: PATH=".venv/bin:$PATH" pytest
+      run: PATH=".venv/bin:$PATH" pytest -s
 
     - name: Run e2e test
       run: PATH=".venv/bin:$PATH" python -m hseb --config tests/ci.yml --out ci.json --warmup 100 --queries 100
