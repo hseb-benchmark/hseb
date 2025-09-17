@@ -93,7 +93,6 @@ class PostgresEngine(EngineBase):
             cursor.execute(f"""
                 CREATE UNLOGGED TABLE IF NOT EXISTS documents (
                     id INTEGER PRIMARY KEY,
-                    text TEXT,
                     embedding {datatype}({self.config.dataset.dim}),
                     tag INTEGER[]
                 );
@@ -101,6 +100,7 @@ class PostgresEngine(EngineBase):
             cursor.execute("SET max_parallel_maintenance_workers = 7;")
             cursor.execute("SET client_min_messages = DEBUG;")
 
+            time.sleep(5)
             # Create HNSW index with appropriate operator class
             ops_class = POSTGRES_INDEX_OPS[index_args.quant]
             cursor.execute(
@@ -112,6 +112,10 @@ class PostgresEngine(EngineBase):
                 (index_args.m, index_args.ef_construction),
             )
 
+            # Create GIN index on tag array for efficient filtering
+            cursor.execute("CREATE INDEX IF NOT EXISTS documents_tag_idx ON documents USING gin (tag);")
+            time.sleep(5)
+
         self.index_args = index_args  # Store for later use
         return self
 
@@ -120,7 +124,7 @@ class PostgresEngine(EngineBase):
             self.connection.close()
         if self.container:
             self.container.stop()
-        if cleanup:
+        if cleanup and self.container is not None:
             self.container.remove()
 
     def commit(self):
@@ -130,13 +134,13 @@ class PostgresEngine(EngineBase):
 
     def index_batch(self, batch: list[Doc]) -> IndexResponse:
         # Prepare data for batch insert
-        data = [(doc.id, doc.text, doc.embedding.tolist(), doc.tag) for doc in batch]
+        data = [(doc.id, doc.embedding.tolist(), doc.tag) for doc in batch]
 
         with self.connection.cursor() as cursor:
             start = time.perf_counter()
             execute_values(
                 cursor,
-                "INSERT INTO documents (id, text, embedding, tag) VALUES %s ON CONFLICT (id) DO NOTHING",
+                "INSERT INTO documents (id, embedding, tag) VALUES %s ON CONFLICT (id) DO NOTHING",
                 data,
                 template=None,
                 page_size=len(data),
@@ -177,6 +181,7 @@ class PostgresEngine(EngineBase):
 
         with self.connection.cursor() as cursor:
             cursor.execute("SET hnsw.ef_search = %s", (search_params.ef_search,))
+            cursor.execute("SET hnsw.iterative_scan = strict_order")
             start = time.time_ns()
             cursor.execute(sql, params)
             results = cursor.fetchall()
