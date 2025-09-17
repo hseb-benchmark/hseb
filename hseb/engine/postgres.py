@@ -100,13 +100,6 @@ class PostgresEngine(EngineBase):
             cursor.execute("SET max_parallel_maintenance_workers = 7;")
             cursor.execute("SET client_min_messages = DEBUG;")
 
-            # # Verify table was created
-            # cursor.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'documents');")
-            # table_exists = cursor.fetchone()[0]
-            # if not table_exists:
-            #     raise RuntimeError("Failed to create documents table")
-
-            # logger.info("Documents table verified to exist")
             time.sleep(5)
             # Create HNSW index with appropriate operator class
             ops_class = POSTGRES_INDEX_OPS[index_args.quant]
@@ -121,13 +114,6 @@ class PostgresEngine(EngineBase):
 
             # Create GIN index on tag array for efficient filtering
             cursor.execute("CREATE INDEX IF NOT EXISTS documents_tag_idx ON documents USING gin (tag);")
-
-            # # Verify indexes were created
-            # cursor.execute("SELECT EXISTS (SELECT FROM pg_indexes WHERE indexname = 'documents_embedding_idx');")
-            # embedding_index_exists = cursor.fetchone()[0]
-            # cursor.execute("SELECT EXISTS (SELECT FROM pg_indexes WHERE indexname = 'documents_tag_idx');")
-            # tag_index_exists = cursor.fetchone()[0]
-            # logger.info(f"HNSW index exists: {embedding_index_exists}, GIN tag index exists: {tag_index_exists}")
             time.sleep(5)
 
         self.index_args = index_args  # Store for later use
@@ -138,7 +124,7 @@ class PostgresEngine(EngineBase):
             self.connection.close()
         if self.container:
             self.container.stop()
-        if cleanup:
+        if cleanup and self.container is not None:
             self.container.remove()
 
     def commit(self):
@@ -197,11 +183,8 @@ class PostgresEngine(EngineBase):
             cursor.execute("SET hnsw.ef_search = %s", (search_params.ef_search,))
             cursor.execute("SET hnsw.iterative_scan = strict_order")
             start = time.time_ns()
-            # logger.info(f"Executing search query: {sql}")
-            # logger.info(f"With params: {params}")
             cursor.execute(sql, params)
             results = cursor.fetchall()
-            # logger.info(f"Search returned {len(results)} results")
         end = time.time_ns()
 
         # Convert to DocScore objects
