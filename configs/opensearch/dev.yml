@@ -17,6 +17,7 @@ experiments:
     kwargs:
       refresh_every: [10000]
       heap_size: ["8g"]
+      engine: ["lucene", "faiss"]
   search:
     ef_search: [128, 256]
     filter_selectivity: [10, 90, 100]
