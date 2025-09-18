@@ -45,6 +45,9 @@ class NixiesearchEngine(EngineBase):
         if self.index_args.segments is not None:
             requests.post("http://localhost:8080/v1/index/test/merge", json={"segments": self.index_args.segments})
 
+    def index_is_green(self) -> bool:
+        return True
+
     def search(self, search_params: SearchArgs, query: Query, top_k: int) -> SearchResponse:
         payload = {
             "query": {

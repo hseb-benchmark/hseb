@@ -46,6 +46,13 @@ if __name__ == "__main__":
         required=False,
         help="number of queries to sample for benchmark",
     )
+    parser.add_argument(
+        "--index-wait-seconds",
+        type=int,
+        required=False,
+        default=300,
+        help="how long should we wait for an index to become green",
+    )
 
     args = parser.parse_args()
 
@@ -79,6 +86,15 @@ if __name__ == "__main__":
 
                     commit_start = time.perf_counter()
                     engine.commit()
+                    poll_green_attempts = 0
+                    is_green = False
+                    while not is_green and poll_green_attempts < args.index_wait_seconds:
+                        is_green = engine.index_is_green()
+                        poll_green_attempts += 1
+                        if not is_green:
+                            time.sleep(1)
+                    if not is_green:
+                        raise Exception(f"Index stuck in non-green status for {args.index_wait_seconds} seconds")
                     try:
                         warmup_start = time.perf_counter()
                         logger.info(

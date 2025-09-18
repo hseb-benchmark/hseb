@@ -29,7 +29,7 @@ class WeaviateEngine(EngineBase):
         self.config = config
         self.client = None
         self.container = None
-        self.collection_name = "TestCollection"
+        self.collection_name = "test"
 
     def start(self, index_args: IndexArgs):
         if index_args.segments is not None:
@@ -86,6 +86,13 @@ class WeaviateEngine(EngineBase):
 
     def commit(self):
         pass
+
+    def index_is_green(self) -> bool:
+        all_shards_green = True
+        for shard in self.client.collections.get(self.collection_name).shards():
+            if shard.vector_indexing_status != "READY":
+                all_shards_green = False
+        return all_shards_green
 
     def index_batch(self, batch: list[Doc]) -> IndexResponse:
         collection = self.client.collections.get(self.collection_name)

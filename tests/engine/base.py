@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import time
 
 from hseb.core.config import Config
 from hseb.core.dataset import BenchmarkDataset, Doc
@@ -15,16 +16,6 @@ class EngineSuite(ABC):
     @abstractmethod
     def config(self) -> Config: ...
 
-    def test_start_stop(self):
-        conf: Config = self.config()
-        engine = EngineBase.load_class(conf.engine, config=conf)
-        for exp in conf.experiments:
-            for index_args in exp.index.expand():
-                try:
-                    engine.start(index_args)
-                finally:
-                    engine.stop(cleanup=True)
-
     def test_index_search(self):
         conf: Config = self.config()
         data = BenchmarkDataset(conf.dataset)
@@ -35,12 +26,19 @@ class EngineSuite(ABC):
         for exp in conf.experiments:
             for index_args in exp.index.expand():
                 try:
+                    logger.info("starting engine")
                     engine.start(index_args)
                     logger.info(f"indexing: {index_args}")
                     for batch in data.corpus_batched(index_args.batch_size):
                         engine.index_batch(batch)
 
                     engine.commit()
+                    is_green = False
+                    attempts = 0
+                    while not is_green and attempts < 3000:
+                        is_green = engine.index_is_green()
+                        time.sleep(1)
+                    assert is_green
                     for search_args in exp.search.expand():
                         measurements = []
                         logger.info(f"searching: {search_args}")

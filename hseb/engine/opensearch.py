@@ -47,7 +47,11 @@ class OpenSearchEngine(EngineBase):
             ssl_show_warn=False,
             timeout=30,
         )
-        index_params = {"knn": True}
+        index_params = {
+            "knn": True,
+            "number_of_shards": 1,
+            "number_of_replicas": 0,
+        }
         if "refresh_every" in index_args.kwargs:
             index_params["refresh_interval"] = "1h"
         if "max_merged_segment" in index_args.kwargs:
@@ -97,6 +101,10 @@ class OpenSearchEngine(EngineBase):
                     "wait_for_completion": True,
                 },
             )
+
+    def index_is_green(self) -> bool:
+        response = self.client.cluster.health(index="test")
+        return response["status"] == "green"
 
     def index_batch(self, batch: list[Doc]) -> IndexResponse:
         actions = []
