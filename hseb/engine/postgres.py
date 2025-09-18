@@ -132,6 +132,12 @@ class PostgresEngine(EngineBase):
         with self.connection.cursor() as cursor:
             cursor.execute("VACUUM ANALYZE documents;")
 
+    def index_is_green(self) -> bool:
+        with self.connection.cursor() as cursor:
+            cursor.execute("""SELECT phase, blocks_done, blocks_total FROM pg_stat_progress_create_index;""")
+            status = cursor.fetchall()
+            return len(status) == 0
+
     def index_batch(self, batch: list[Doc]) -> IndexResponse:
         # Prepare data for batch insert
         data = [(doc.id, doc.embedding.tolist(), doc.tag) for doc in batch]

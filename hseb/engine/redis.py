@@ -90,6 +90,10 @@ class RedisEngine(EngineBase):
     def commit(self):
         pass
 
+    def index_is_green(self) -> bool:
+        info = self.client.ft("documents").info()
+        return info["indexing"] == 0
+
     def index_batch(self, batch: list[Doc]) -> IndexResponse:
         pipe = self.client.pipeline()
 

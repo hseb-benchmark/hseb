@@ -45,7 +45,13 @@ class ElasticsearchEngine(EngineBase):
         self._wait_for_logs(self.container, "is selected as the current health node")
         self.client = Elasticsearch("http://localhost:9200", request_timeout=30)
         # we control segment size by calling refresh
-        settings = {"index": {"refresh_interval": "1h"}}
+        settings = {
+            "index": {
+                "refresh_interval": "1h",
+                "number_of_replicas": 0,
+                "number_of_shards": 1,
+            }
+        }
         if "max_merged_segment" in index_args.kwargs:
             settings["merge"] = {"policy": {"max_merged_segment": index_args.kwargs["max_merged_segment"]}}
 
@@ -87,6 +93,10 @@ class ElasticsearchEngine(EngineBase):
                 max_num_segments=self.index_args.segments,
                 wait_for_completion=True,
             )
+
+    def index_is_green(self) -> bool:
+        response = self.client.cluster.health(index="test")
+        return response["status"] == "green"
 
     def index_batch(self, batch: list[Doc]) -> IndexResponse:
         actions = []

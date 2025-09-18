@@ -22,6 +22,9 @@ class EngineBase(ABC):
     def commit(self) -> None: ...
 
     @abstractmethod
+    def index_is_green(self) -> bool: ...
+
+    @abstractmethod
     def index_batch(self, batch: list[Doc]) -> IndexResponse: ...
 
     @abstractmethod

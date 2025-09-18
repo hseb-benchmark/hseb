@@ -32,7 +32,7 @@ class TestWeaviateEngine(EngineSuite):
                     ),
                     search=SearchArgsMatrix(
                         ef_search=[16],
-                        filter_selectivity=[100],
+                        filter_selectivity=[10, 100],
                     ),
                 )
             ],

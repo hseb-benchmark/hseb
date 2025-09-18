@@ -41,17 +41,11 @@ class Qdrant(EngineBase):
         return IndexResponse(client_latency=end - start)
 
     def commit(self):
-        is_green = False
-        attempts = 0
-        while not is_green and attempts < 60:
-            status = self.client.get_collection(collection_name="test")
-            if status.status == CollectionStatus.GREEN:
-                is_green = True
-            else:
-                attempts += 1
-                time.sleep(1)
-        if not is_green:
-            raise Exception("collection stuck at non-green status")
+        pass
+
+    def index_is_green(self) -> bool:
+        status = self.client.get_collection(collection_name="test")
+        return status.status == CollectionStatus.GREEN
 
     def search(self, search_params: SearchArgs, query: Query, top_k: int) -> SearchResponse:
         def create_filter():
