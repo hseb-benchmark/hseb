@@ -35,7 +35,7 @@ class EngineSuite(ABC):
                     engine.commit()
                     is_green = False
                     attempts = 0
-                    while not is_green and attempts < 3000:
+                    while not is_green and attempts < 30:
                         is_green = engine.index_is_green()
                         time.sleep(1)
                     assert is_green

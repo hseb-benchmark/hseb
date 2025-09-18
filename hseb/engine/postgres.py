@@ -136,7 +136,6 @@ class PostgresEngine(EngineBase):
         with self.connection.cursor() as cursor:
             cursor.execute("""SELECT phase, blocks_done, blocks_total FROM pg_stat_progress_create_index;""")
             status = cursor.fetchall()
-            print(status)
             return len(status) == 0
 
     def index_batch(self, batch: list[Doc]) -> IndexResponse:

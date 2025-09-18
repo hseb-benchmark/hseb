@@ -96,7 +96,6 @@ class ElasticsearchEngine(EngineBase):
 
     def index_is_green(self) -> bool:
         response = self.client.cluster.health(index="test")
-        print(response)
         return response["status"] == "green"
 
     def index_batch(self, batch: list[Doc]) -> IndexResponse:
