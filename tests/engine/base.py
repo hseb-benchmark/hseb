@@ -1,20 +1,66 @@
 from abc import ABC, abstractmethod
 import time
 
-from hseb.core.config import Config
+from hseb.core.config import Config, DatasetConfig, ExperimentConfig, IndexArgsMatrix, QuantDatatype, SearchArgsMatrix
 from hseb.core.dataset import BenchmarkDataset, Doc
 from hseb.core.measurement import ExperimentResult, QueryResult
 from hseb.core.submission import ExperimentMetrics
 from hseb.engine.base import EngineBase
 from tqdm import tqdm
 from structlog import get_logger
+from dataclasses import dataclass, field
 
 logger = get_logger()
 
 
+@dataclass
+class EngineParams:
+    engine: str
+    image: str
+    quantizations: list[QuantDatatype] = field(default_factory=list)
+    index_kwargs: dict[str, list] = field(default_factory=dict)
+
+
 class EngineSuite(ABC):
     @abstractmethod
-    def config(self) -> Config: ...
+    def params(self) -> EngineParams: ...
+
+    def config(self) -> Config:
+        engine_params = self.params()
+        return Config(
+            engine=engine_params.engine,
+            image=engine_params.image,
+            dataset=DatasetConfig(
+                dim=384,
+                name="hseb-benchmark/msmarco",
+                query="query-all-MiniLM-L6-v2-1K",
+                corpus="corpus-all-MiniLM-L6-v2-1K",
+            ),
+            experiments=[
+                ExperimentConfig(
+                    tag="test",
+                    k=10,
+                    index=IndexArgsMatrix(
+                        m=[16],
+                        ef_construction=[64],
+                        quant=[QuantDatatype.FLOAT32],
+                        kwargs=engine_params.index_kwargs,
+                    ),
+                    search=SearchArgsMatrix(ef_search=[16], filter_selectivity=[10, 100]),
+                ),
+                ExperimentConfig(
+                    tag="test-quant",
+                    k=10,
+                    index=IndexArgsMatrix(
+                        m=[16],
+                        ef_construction=[64],
+                        quant=engine_params.quantizations,
+                        kwargs=engine_params.index_kwargs,
+                    ),
+                    search=SearchArgsMatrix(ef_search=[16], filter_selectivity=[100]),
+                ),
+            ],
+        )
 
     def test_index_search(self):
         conf: Config = self.config()

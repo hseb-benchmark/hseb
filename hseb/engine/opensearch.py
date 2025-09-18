@@ -56,7 +56,30 @@ class OpenSearchEngine(EngineBase):
             index_params["refresh_interval"] = "1h"
         if "max_merged_segment" in index_args.kwargs:
             index_params["merge"] = {"policy": {"max_merged_segment": index_args.kwargs["max_merged_segment"]}}
-
+        field_params = {
+            "type": "knn_vector",
+            "dimension": self.config.dataset.dim,
+            "space_type": "innerproduct",
+            "data_type": "float",
+            "method": {
+                "name": "hnsw",
+                "engine": index_args.kwargs.get("engine", "lucene"),
+                "parameters": {
+                    "m": index_args.m,
+                    "ef_construction": index_args.ef_construction,
+                },
+            },
+        }
+        match index_args.quant:
+            case QuantDatatype.FLOAT32:
+                field_params["compression_level"] = "1x"
+                # lucene or faiss
+            case QuantDatatype.FLOAT16:
+                field_params["compression_level"] = "2x"
+                field_params["method"]["engine"] = "faiss"
+            case QuantDatatype.INT8:
+                field_params["compression_level"] = "4x"
+                field_params["method"]["engine"] = "lucene"
         self.client.indices.create(
             index="test",
             body={
@@ -65,20 +88,7 @@ class OpenSearchEngine(EngineBase):
                 },
                 "mappings": {
                     "properties": {
-                        "text": {
-                            "type": "knn_vector",
-                            "dimension": self.config.dataset.dim,
-                            "space_type": "innerproduct",
-                            "data_type": OS_DATATYPES[index_args.quant],
-                            "method": {
-                                "name": "hnsw",
-                                "engine": "lucene",
-                                "parameters": {
-                                    "m": index_args.m,
-                                    "ef_construction": index_args.ef_construction,
-                                },
-                            },
-                        },
+                        "text": field_params,
                         "tag": {"type": "integer"},
                     }
                 },

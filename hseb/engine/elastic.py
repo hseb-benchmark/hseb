@@ -11,12 +11,6 @@ from hseb.engine.base import EngineBase
 
 logger = logging.getLogger()
 
-ES_DATATYPES = {
-    QuantDatatype.FLOAT32: "float",
-    QuantDatatype.INT8: "byte",
-    QuantDatatype.INT1: "bit",
-}
-
 ES_HNSW_TYPES = {
     QuantDatatype.FLOAT32: "hnsw",
     QuantDatatype.INT8: "int8_hnsw",
@@ -66,7 +60,6 @@ class ElasticsearchEngine(EngineBase):
                         "dims": self.config.dataset.dim,
                         "index": True,
                         "similarity": "dot_product",
-                        "element_type": ES_DATATYPES[index_args.quant],
                         "index_options": {
                             # use the same as element_type to make it simpler - we're not measuring rescoring yet
                             "type": ES_HNSW_TYPES[index_args.quant],
