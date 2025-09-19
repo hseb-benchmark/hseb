@@ -124,8 +124,8 @@ class PostgresEngine(EngineBase):
             self.connection.close()
         if self.container:
             self.container.stop()
-        if cleanup and self.container is not None:
-            self.container.remove()
+        if cleanup and self.container:
+            self.container.remove(v=True)
 
     def commit(self):
         # Just optimize table

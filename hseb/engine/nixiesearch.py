@@ -125,5 +125,5 @@ class NixiesearchEngine(EngineBase):
     def stop(self, cleanup: bool):
         self.container.stop()
         self.dir.cleanup()
-        if cleanup:
-            self.container.remove()
+        if cleanup and self.container:
+            self.container.remove(v=True)

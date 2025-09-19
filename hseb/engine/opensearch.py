@@ -99,9 +99,7 @@ class OpenSearchEngine(EngineBase):
     def stop(self, cleanup: bool):
         self.container.stop()
         if cleanup and self.container:
-            self.container.remove()
-            if self.container.client:
-                self.container.client.prune_volumes()
+            self.container.remove(v=True)
 
     def commit(self):
         self.client.indices.refresh(index="test")
