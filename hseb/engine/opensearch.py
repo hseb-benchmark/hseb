@@ -98,8 +98,10 @@ class OpenSearchEngine(EngineBase):
 
     def stop(self, cleanup: bool):
         self.container.stop()
-        if cleanup:
+        if cleanup and self.container:
             self.container.remove()
+            if self.container.client:
+                self.container.client.prune_volumes()
 
     def commit(self):
         self.client.indices.refresh(index="test")
@@ -139,19 +141,19 @@ class OpenSearchEngine(EngineBase):
             self.docs_in_segment = 0
         return IndexResponse(client_latency=end - start)
 
-    def search(self, search_params: SearchArgs, query: Query, top_k: int) -> SearchResponse:
+    def search(self, search_args: SearchArgs, query: Query, top_k: int) -> SearchResponse:
         knn_query = {
             "text": {
                 "vector": query.embedding.tolist(),
                 "k": top_k,
                 "method_parameters": {
-                    "ef_search": search_params.ef_search,
+                    "ef_search": search_args.ef_search,
                 },
             }
         }
 
-        if search_params.filter_selectivity != 100:
-            knn_query["text"]["filter"] = {"terms": {"tag": [search_params.filter_selectivity]}}
+        if search_args.filter_selectivity != 100:
+            knn_query["text"]["filter"] = {"terms": {"tag": [search_args.filter_selectivity]}}
 
         search_body = {
             "size": top_k,
