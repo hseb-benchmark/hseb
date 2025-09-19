@@ -85,9 +85,7 @@ class RedisEngine(EngineBase):
         if self.container:
             self.container.stop()
         if cleanup and self.container:
-            self.container.remove()
-            if self.container.client:
-                self.container.client.prune_volumes()
+            self.container.remove(v=True)
 
     def commit(self):
         pass
