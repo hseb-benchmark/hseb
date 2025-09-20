@@ -59,12 +59,13 @@ if __name__ == "__main__":
     config = Config.from_file(args.config)
     data = BenchmarkDataset(config.dataset)
     engine = EngineBase.load_class(config.engine, config)
-    with tempfile.TemporaryDirectory(prefix="hseb_", delete=False) as workdir:
+    with tempfile.TemporaryDirectory(prefix="hseb_", delete=args.cleanup) as workdir:
         logger.info(f"Initialized engine, workdir: {workdir}")
         run_index = 0
+        index_fails = 0
+        search_fails = 0
+        search_request_fails = 0
         for exp_index, exp in enumerate(config.experiments):
-            index_fails = 0
-            search_fails = 0
             index_variations = exp.index.expand()
             search_variations = exp.search.expand()
             total_cases = len(index_variations) * len(search_variations)
@@ -117,13 +118,21 @@ if __name__ == "__main__":
                             measurements: list[QueryResult] = []
                             k_eff = min(exp.k, search_args.ef_search)
                             incomplete_results: list[int] = []
+                            failed_queries = 0
                             for query in tqdm(list(data.queries(limit=args.queries)), desc="search"):
-                                response = engine.search(search_args, query, k_eff)
-                                if len(response.results) != k_eff:
-                                    incomplete_results.append(len(response.results))
-                                measurements.append(
-                                    QueryResult.from_response(query=query, search_args=search_args, response=response)
-                                )
+                                try:
+                                    response = engine.search(search_args, query, k_eff)
+                                    if len(response.results) != k_eff:
+                                        incomplete_results.append(len(response.results))
+                                    measurements.append(
+                                        QueryResult.from_response(
+                                            query=query, search_args=search_args, response=response
+                                        )
+                                    )
+                                except Exception as error:
+                                    logger.exception(f"got search request error {error}")
+                                    failed_queries += 1
+                                    search_request_fails += 1
 
                             result = ExperimentResult(
                                 tag=exp.tag,
@@ -139,6 +148,8 @@ if __name__ == "__main__":
                                 logger.warning(
                                     f"Engine returned {len(incomplete_results)}/{len(measurements)} incomplete results (expected {k_eff}): {incomplete_results}"
                                 )
+                            if failed_queries > 0:
+                                logger.warning(f"Engine got {failed_queries} queries with errors")
                             logger.info(f"Run finished: {metrics.metrics.as_string()}")
                             run_index += 1
                     except Exception as error:
@@ -155,4 +166,6 @@ if __name__ == "__main__":
         submission = Submission.from_dir(config=config, path=workdir)
         logger.info(f"Writing submission file to {args.out}")
         submission.to_json(args.out)
-        logger.info(f"Experiment finished. {index_fails} index fails, {search_fails} search fails.")
+        logger.info(
+            f"Experiment finished. {index_fails} index fails, {search_fails} search fails ({search_request_fails} failed requests)."
+        )
