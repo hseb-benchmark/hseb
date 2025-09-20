@@ -31,12 +31,16 @@ class PostgresEngine(EngineBase):
         self.connection = None
         self.container = None
 
-    def start(self, index_args: IndexArgs):
+    def start(self, index_args: IndexArgs) -> None:
         # Check for unsupported quantization types
         if index_args.quant == QuantDatatype.INT8:
             raise ValueError("Postgres with pgvector does not support INT8 quantization")
         if index_args.segments is not None:
             raise ValueError("Postgres with pgvector cannot set number of segments")
+        if index_args.ef_construction < index_args.m * 2:
+            raise ValueError(
+                f"pgvector requires efc >= 2*m (current ef={index_args.ef_construction} m={index_args.m})"
+            )
 
         docker_client = docker.from_env()
 
