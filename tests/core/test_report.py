@@ -2,7 +2,7 @@ from hseb.core.config import IndexArgs, QuantDatatype, SearchArgs
 from hseb.core.measurement import ExperimentResult, QueryResult
 from hseb.core.report import Report
 from hseb.core.response import DocScore
-from hseb.core.submission import ExperimentMetrics, Submission
+from hseb.core.submission import ExperimentMetrics
 
 
 def test_report():
