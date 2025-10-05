@@ -130,12 +130,12 @@ class RedisEngine(EngineBase):
                 embedding_bytes = query.embedding.astype("int8").tobytes()
 
         # Create base query with AS clause for scoring
-        base_query = f"(*)=>[KNN {top_k} @embedding $query_vector AS vector_score]"
+        base_query = f"(*)=>[KNN {top_k} @embedding $query_vector EF_RUNTIME $EF AS vector_score]"
 
         # Add filter if needed
         if search_params.filter_selectivity != 100:
             # Filter by tag using TagField exact match syntax with curly brackets
-            base_query = f"(@tag:{{{search_params.filter_selectivity}}})=>[KNN {top_k} @embedding $query_vector AS vector_score]"
+            base_query = f"(@tag:{{{search_params.filter_selectivity}}})=>[KNN {top_k} @embedding $query_vector EF_RUNTIME $EF AS vector_score]"
 
         # Use ef_search parameter for HNSW search
 
@@ -147,7 +147,7 @@ class RedisEngine(EngineBase):
             .return_fields("vector_score")
             .dialect(2)
             .paging(0, top_k),
-            query_params={"query_vector": embedding_bytes},
+            query_params={"query_vector": embedding_bytes, "EF": search_params.ef_search},
         )
         end = time.time_ns()
 
