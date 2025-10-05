@@ -50,7 +50,7 @@ if __name__ == "__main__":
         "--index-wait-seconds",
         type=int,
         required=False,
-        default=300,
+        default=1800,
         help="how long should we wait for an index to become green",
     )
 
@@ -119,6 +119,7 @@ if __name__ == "__main__":
                             k_eff = min(exp.k, search_args.ef_search)
                             incomplete_results: list[int] = []
                             failed_queries = 0
+                            engine.pre_search(index_args=index_args, search_args=search_args)
                             for query in tqdm(list(data.queries(limit=args.queries)), desc="search"):
                                 try:
                                     response = engine.search(search_args, query, k_eff)

@@ -27,6 +27,10 @@ class EngineBase(ABC):
     @abstractmethod
     def index_batch(self, batch: list[Doc]) -> IndexResponse: ...
 
+    def pre_search(self, index_args: IndexArgs, search_args: SearchArgs) -> None:
+        # do nothing by default
+        return None
+
     @abstractmethod
     def search(self, search_args: SearchArgs, query: Query, top_k: int) -> SearchResponse: ...
 
