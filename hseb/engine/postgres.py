@@ -191,7 +191,7 @@ class PostgresEngine(EngineBase):
 
         with self.connection.cursor() as cursor:
             cursor.execute("SET hnsw.ef_search = %s", (search_params.ef_search,))
-            cursor.execute("SET hnsw.iterative_scan = strict_order")
+            cursor.execute("SET hnsw.iterative_scan = %s", (search_params.kwargs.get("order", "strict_order"),))
             start = time.time_ns()
             cursor.execute(sql, params)
             results = cursor.fetchall()

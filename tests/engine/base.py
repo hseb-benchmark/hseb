@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import time
+import math
 
 from hseb.core.config import Config, DatasetConfig, ExperimentConfig, IndexArgsMatrix, QuantDatatype, SearchArgsMatrix
 from hseb.core.dataset import BenchmarkDataset, Doc
@@ -19,6 +20,8 @@ class EngineParams:
     image: str
     quantizations: list[QuantDatatype] = field(default_factory=list)
     index_kwargs: dict[str, list] = field(default_factory=dict)
+    search_kwargs: dict[str, list] = field(default_factory=dict)
+    order_tolerance_rate: float = 0.0
 
 
 class EngineSuite(ABC):
@@ -46,7 +49,11 @@ class EngineSuite(ABC):
                         quant=[QuantDatatype.FLOAT32],
                         kwargs=engine_params.index_kwargs,
                     ),
-                    search=SearchArgsMatrix(ef_search=[16], filter_selectivity=[10, 100]),
+                    search=SearchArgsMatrix(
+                        ef_search=[16],
+                        filter_selectivity=[10, 100],
+                        kwargs=engine_params.search_kwargs,
+                    ),
                 ),
                 ExperimentConfig(
                     tag="test-quant",
@@ -66,6 +73,7 @@ class EngineSuite(ABC):
         conf: Config = self.config()
         data = BenchmarkDataset(conf.dataset)
         engine = EngineBase.load_class(conf.engine, config=conf)
+        engine_params = self.params()
 
         docs: dict[int, Doc] = {doc.id: doc for doc in data.corpus()}
 
@@ -92,13 +100,26 @@ class EngineSuite(ABC):
                             results = engine.search(search_args, query, 16)
                             assert len(results.results) == 16
                             measurements.append(QueryResult.from_response(query, search_args, results))
+
+                            # Check ordering with tolerance
+                            violations = 0
                             prev_score = 10000.0
                             for doc in results.results:
-                                assert doc.score <= prev_score
+                                if doc.score > prev_score:
+                                    violations += 1
                                 assert isinstance(doc.doc, int)
                                 real_doc = docs[doc.doc]
                                 assert search_args.filter_selectivity in real_doc.tag
                                 prev_score = doc.score
+
+                            # Allow violations based on tolerance rate
+                            assert 0.0 <= engine_params.order_tolerance_rate <= 1.0, (
+                                f"order_tolerance_rate must be between 0.0 and 1.0, got {engine_params.order_tolerance_rate}"
+                            )
+                            max_violations = math.ceil(len(results.results) * engine_params.order_tolerance_rate)
+                            assert violations <= max_violations, (
+                                f"Too many ordering violations: {violations} > {max_violations}"
+                            )
                         result = ExperimentResult(
                             tag="test",
                             indexing_time=[1],

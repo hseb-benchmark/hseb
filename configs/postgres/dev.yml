@@ -21,3 +21,4 @@ experiments:
   search:
     ef_search: [32]
     filter_selectivity: [100]
+    order: ["relaxed_order", "strict_order"]

@@ -20,6 +20,7 @@ experiments:
   search:
     ef_search: [32, 64, 96, 128, 192, 256]
     filter_selectivity: [10, 90, 100]
+    order: ["relaxed_order", "strict_order"]
 - tag: quant
   k: 100
   index:
@@ -33,3 +34,4 @@ experiments:
   search:
     ef_search: [32, 64, 96, 128, 192, 256]
     filter_selectivity: [100]
+    order: ["relaxed_order", "strict_order"]
