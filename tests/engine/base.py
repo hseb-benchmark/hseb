@@ -113,6 +113,9 @@ class EngineSuite(ABC):
                                 prev_score = doc.score
 
                             # Allow violations based on tolerance rate
+                            assert 0.0 <= engine_params.order_tolerance_rate <= 1.0, (
+                                f"order_tolerance_rate must be between 0.0 and 1.0, got {engine_params.order_tolerance_rate}"
+                            )
                             max_violations = math.ceil(len(results.results) * engine_params.order_tolerance_rate)
                             assert violations <= max_violations, (
                                 f"Too many ordering violations: {violations} > {max_violations}"
