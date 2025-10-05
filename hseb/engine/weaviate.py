@@ -1,13 +1,15 @@
 import logging
 import time
+from typing import override
 from uuid import UUID
 import uuid
 
 import docker
 import weaviate
-from weaviate.classes.config import Configure, VectorDistances, DataType, Property
+from weaviate.classes.config import Configure, VectorDistances, DataType, Property, Reconfigure
 from weaviate.classes.query import Filter, MetadataQuery
 from weaviate.classes.data import DataObject
+from weaviate.collections import Collection
 
 
 from hseb.core.config import Config, IndexArgs, QuantDatatype, SearchArgs
@@ -117,6 +119,18 @@ class WeaviateEngine(EngineBase):
         collection.data.insert_many(objects)
         end = time.perf_counter()
         return IndexResponse(client_latency=end - start)
+
+    @override
+    def pre_search(self, index_args: IndexArgs, search_args: SearchArgs):
+        collection: Collection = self.client.collections.get(self.collection_name)
+        collection.config.update(
+            vector_config=Reconfigure.Vectors.update(
+                name="self",
+                vector_index_config=Reconfigure.VectorIndex.hnsw(
+                    ef=search_args.ef_search,
+                ),
+            )
+        )
 
     def search(self, search_params: SearchArgs, query: Query, top_k: int) -> SearchResponse:
         collection = self.client.collections.get(self.collection_name)

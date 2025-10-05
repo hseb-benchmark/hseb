@@ -13,6 +13,6 @@ if __name__ == "__main__":
     logger.info(f"Writing report: {args}")
 
     submission = Submission.from_json(args.input)
-    report = Report.from_experiments(submission.experiments)
-    report.df.to_json(args.report)
+    report = Report.from_experiments(engine=submission.config.engine, experiments=submission.experiments)
+    report.df.to_json(args.report, lines=True, orient="records")
     logger.info(f"Report written to {args.report}")
