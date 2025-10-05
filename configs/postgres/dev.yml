@@ -18,7 +18,7 @@ experiments:
       shared_buffers: ["8GB"]
       work_mem: ["8GB"]
       maintenance_work_mem: ["8GB"]
-      order: ["relaxed_order", "strict_order"]
   search:
     ef_search: [32]
     filter_selectivity: [100]
+    order: ["relaxed_order", "strict_order"]
