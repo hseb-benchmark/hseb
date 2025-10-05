@@ -23,4 +23,4 @@ def test_report():
         warmup_latencies=[1],
     )
     submission = Report.from_experiments(engine="test", experiments=[ExperimentMetrics.from_experiment(result)])
-    assert submission.df.shape == (1, 18)
+    assert submission.df.shape == (1, 21)
